@@ -27,6 +27,7 @@ import {
   Radar,
   Inbox,
   ListOrdered,
+  SquareKanban,
 } from "lucide-react";
 import {
   Sidebar,
@@ -79,14 +80,18 @@ import { Requests } from "./requests";
 import { Priorities } from "./priorities";
 import { ErrorMessage, Loading } from "./shared";
 import { AgentsPage } from "./agents";
+import { AgentBoard } from "./agent-board";
 const VehicleStudio = dynamic(() => import("./vehicle-studio").then((module) => module.VehicleStudio), {
   ssr: false,
   loading: () => <Loading label="Opening vehicle studio…" />,
 });
 const primaryPages = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
-  { key: "agents", label: "Agents", icon: Bot },
   { key: "twin", label: "Vehicle Studio", icon: CarFront },
+];
+const agentPages = [
+  { key: "agents", label: "Agent system", icon: Bot },
+  { key: "agent-board", label: "Agent board", icon: SquareKanban },
 ];
 const softwarePages = [
   { key: "requirements", label: "Requirements", icon: ListChecks },
@@ -101,34 +106,43 @@ const softwarePages = [
   { key: "audit", label: "Activity", icon: History },
   { key: "settings", label: "Settings", icon: Settings },
 ];
-const pages = [primaryPages[0], ...softwarePages, ...primaryPages.slice(1)];
+const pages = [primaryPages[0], ...softwarePages, ...agentPages, ...primaryPages.slice(1)];
+/** Sections that render without the workspace evidence queries. */
+const standalone = new Set(["agents", "agent-board"]);
 const marketNames: Record<string, string> = { US: "United States", CN: "China", EU: "Europe" };
 
-function SoftwareNavigation({
+function NavigationGroup({
+  id,
+  label,
+  icon: Icon,
+  items,
+  storageKey,
   base,
   section,
   reviewCount,
 }: {
+  id: string;
+  label: string;
+  icon: typeof Layers3;
+  items: { key: string; label: string }[];
+  storageKey: string;
   base: string;
   section: string;
   reviewCount?: number;
 }) {
   const { state, setOpen } = useSidebar();
-  const [softwareState, setSoftwareState] = useStoredValue(
-    "bmw-software-navigation",
-    "open",
-  );
+  const [softwareState, setSoftwareState] = useStoredValue(storageKey, "open");
   const expanded = softwareState !== "closed";
-  const active = softwarePages.some((page) => page.key === section);
+  const active = items.some((page) => page.key === section);
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         type="button"
-        tooltip="Software"
+        tooltip={label}
         isActive={active}
         aria-expanded={expanded}
-        aria-controls="software-navigation"
+        aria-controls={id}
         className="software-nav-trigger"
         onClick={() => {
           if (state === "collapsed") {
@@ -139,12 +153,12 @@ function SoftwareNavigation({
           }
         }}
       >
-        <Layers3 />
-        <span>Product planning</span>
+        <Icon />
+        <span>{label}</span>
         <ChevronRight className={`software-nav-chevron ${expanded ? "is-open" : ""}`} />
       </SidebarMenuButton>
-      <SidebarMenuSub id="software-navigation" hidden={!expanded}>
-        {softwarePages.map((page) => (
+      <SidebarMenuSub id={id} hidden={!expanded}>
+        {items.map((page) => (
           <SidebarMenuSubItem key={page.key}>
             <SidebarMenuSubButton
               isActive={section === page.key}
@@ -322,10 +336,24 @@ export function WorkspaceApp({
                     <span>Overview</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SoftwareNavigation
+                <NavigationGroup
+                  id="software-navigation"
+                  label="Product planning"
+                  icon={Layers3}
+                  items={softwarePages}
+                  storageKey="bmw-software-navigation"
                   base={base}
                   section={section}
                   reviewCount={metrics.data?.counts.open_reviews}
+                />
+                <NavigationGroup
+                  id="agent-navigation"
+                  label="Agents"
+                  icon={Bot}
+                  items={agentPages}
+                  storageKey="bmw-agent-navigation"
+                  base={base}
+                  section={section}
                 />
                 {primaryPages.slice(1).map((page) => (
                   <SidebarMenuItem key={page.key}>
@@ -389,7 +417,7 @@ export function WorkspaceApp({
                 <span>Search</span>
                 <kbd>⌘ K</kbd>
               </button>
-              {section !== "agents" && (
+              {!standalone.has(section) && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -413,6 +441,8 @@ export function WorkspaceApp({
             <main>
               {section === "agents" ? (
                 <AgentsPage />
+              ) : section === "agent-board" ? (
+                <AgentBoard />
               ) : loadError ? (
                 <ErrorMessage error={loadError} retry={refresh} />
               ) : context.loading ? (

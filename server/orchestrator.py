@@ -367,6 +367,17 @@ def _loop(session_id: str) -> None:
     _finish(session_id, "succeeded", summary=summary, usage=usage)
 
 
+def recover_interrupted_sessions() -> list[str]:
+    """Sessions run in this process's threads; any still 'running' at startup were interrupted by a restart."""
+    with closing(connect()) as connection:
+        ids = [row[0] for row in connection.execute("SELECT id FROM agent_sessions WHERE status='running'")]
+    for session_id in ids:
+        _add_step(session_id, ORCHESTRATOR, "error", "Interrupted by an API restart", "failed",
+                  {"error": "The API restarted while this session ran; completed steps and artifacts are kept."})
+        _finish(session_id, "failed", error="Interrupted by an API restart")
+    return ids
+
+
 # API ------------------------------------------------------------------------------------------------
 
 def start_session(command: SessionStart, background: bool = True) -> dict:

@@ -164,3 +164,12 @@ def test_specialists_reject_other_scopes_and_unassigned_capabilities(scope):
                                          "title": "Not the drafter", "input": {"requirement_id": target},
                                          "requested_by": PM, "assigned_agent_id": "ai:agent:challenger"})
     assert refused.status_code == 422
+
+
+def test_sessions_interrupted_by_a_restart_are_closed_at_startup(scope, monkeypatch):
+    monkeypatch.setattr(orchestrator.threading, "Thread", lambda **kwargs: type("T", (), {"start": lambda self: None})())
+    session = scope.post("/sessions", json={"vehicle": "G60", "market": "US", "started_by": PM}).json()
+    assert orchestrator.recover_interrupted_sessions() == [session["id"]]
+    closed = scope.get(f"/sessions/{session['id']}").json()
+    assert closed["status"] == "failed" and closed["error"] == "Interrupted by an API restart"
+    assert scope.post("/sessions", json={"vehicle": "G60", "market": "US", "started_by": PM}).status_code == 201

@@ -25,6 +25,7 @@ from server.llm import LLMOutputInvalid
 from server.market_data import router as market_data_router
 from server.markets import router as markets_router
 from server.models import Scope, json_size
+from server.orchestrator import recover_interrupted_sessions
 from server.orchestrator import router as sessions_router
 from server.pipeline import router as pipeline_router
 from server.platform import HUMAN_REQUIRED
@@ -59,6 +60,7 @@ class Source(SourceCreate):
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_database()
+    recover_interrupted_sessions()
     yield
 
 

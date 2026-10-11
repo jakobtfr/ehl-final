@@ -61,7 +61,7 @@ complaints, recalls and owner-forum records alongside BMW feedback. No decision 
 
 ## Limits
 
-- Sessions run in an API worker thread; a restart interrupts a running session (it stays `running` and must be
-  stopped by a human). Resume is not implemented.
+- Sessions run in an API worker thread. A restart interrupts a running session; at startup it is closed as
+  `failed` with its completed steps and artifacts kept. Resume is not implemented.
 - The OpenAI planner is slow (about 15 s per step); the reference plan is the fast path for demos and tests.
 - Actor identities are local declarations under the prototype contract, not authenticated enterprise users.

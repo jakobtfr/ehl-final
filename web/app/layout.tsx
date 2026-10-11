@@ -4,6 +4,7 @@ import { Providers } from "@/components/pm/providers";
 import "./globals.css";
 import "./workspace.css";
 import "./platform.css";
+import "./agent-board.css";
 const barlow = Barlow({
   variable: "--font-barlow",
   weight: ["300", "400", "500", "600"],

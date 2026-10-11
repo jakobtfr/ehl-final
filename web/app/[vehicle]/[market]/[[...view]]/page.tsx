@@ -17,6 +17,7 @@ export default async function Page({
     ![
       "overview",
       "agents",
+      "agent-board",
       "requirements",
       "reviews",
       "evidence",

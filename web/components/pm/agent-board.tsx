@@ -41,7 +41,6 @@ import {
   type ChatItem,
   type Step,
 } from "./agent-board-data";
-import { SimulatedBadge } from "./platform-shared";
 import { useWorkspace } from "./context";
 
 type GroupBy = "status" | "category";
@@ -459,7 +458,6 @@ function SidePeek({
         <span className="side-peek-crumb">
           Agent board / {agent ? categoryLabel(agent.category) : "Channel"}
         </span>
-        <SimulatedBadge />
       </div>
 
       <div className="side-peek-body">
@@ -731,7 +729,6 @@ export function AgentBoard() {
           </p>
         </div>
         <div className="board-actions">
-          <SimulatedBadge />
           <button type="button" className={`board-channel-button ${open === CHANNEL ? "is-active" : ""}`} onClick={() => openTarget(CHANNEL)}>
             <MessagesSquare size={15} />
             Agent channel

@@ -33,6 +33,7 @@ The update command refuses to run until the hero has an approved version. It imp
 ## Fallback and Q&A
 
 - If the browser stalls, keep the deck visible and use its static evidence/requirement/update slides or the local [capture pack](bmw-demo-captures.md). A complete recorded live run has **not** been produced or timed yet; do not claim that it exists.
+- A private offline bundle is at `database/local/presentation-backup.zip` (SHA-256 `ee50a94fe484b2807c25953e15151d9426a2cc525d0570c6de9a461160adf902`). It contains the self-contained BMW HTML deck, six-page PDF and seven local captures. Its ZIP integrity passed; the HTML has no external asset references. Browser policy prevented an independent local-file playback check here. Capture 03 contains BMW-derived feedback and must stay private.
 - If the presenter does not approve, stop before the update command. Show the decision gate and explain the update path as a verified disposable rehearsal, labelled as such.
 - If asked about agents: this frozen candidate uses a labelled deterministic reference pipeline. The integrated platform branch has a registry and capability runtime, but a live multi-agent OpenAI chain is not part of this demo.
 - If asked about security: AI-labelled approval is rejected; a client can still supply an actor string. SSO, permissions and BMW-hosted infrastructure require a pilot.

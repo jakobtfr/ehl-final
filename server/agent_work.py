@@ -312,7 +312,7 @@ def _template(audience: str, facts: dict) -> dict:
                   f"{facts['priority']:.1f} and evidence grade {facts['evidence_grade']}. Evidence: "
                   f"{facts['evidence_summary']}.",
         "board": f"{key} · priority {facts['priority']:.1f}, evidence grade {facts['evidence_grade']}, {status}. "
-                 f"Basis: {facts['evidence_summary']}. Risks: {facts['risks']}.",
+                 f"Basis: {facts['evidence_summary']}. Risks: {facts['risks']}",
         "sales": f"What customers told us: {facts['customer_need']} The successor plan addresses this; details follow "
                  "once validated.",
     }
@@ -342,7 +342,7 @@ def draft_communications(command: RequirementTask, actor: str | None = None) -> 
                  "acceptance_criteria": version["acceptance_criteria"], "assumptions": version["assumptions"],
                  "priority": score["total"], "evidence_grade": score["evidence_grade"], "decision_status": status,
                  "evidence_summary": ", ".join(f"{s['supporting']} records from {s['title']}" for s in mix["sources"][:4]),
-                 "risks": "; ".join(score["explanation"].get("limitations", [])[:3])}
+                 "risks": " ".join(limit.rstrip(".") + "." for limit in score["explanation"].get("limitations", [])[:3])}
         if client is None:
             drafts = [_template(audience, facts) for audience in AUDIENCES]
         else:
@@ -398,7 +398,7 @@ def morning_brief(command: ScopeTask, actor: str | None = None) -> dict:
         awaiting = [r for r in requirements if not r["approved"]]
         lines = []
         if new_sources:
-            lines.append({"kind": "evidence", "text": f"{sum(s['records'] for s in new_sources)} new records from "
+            lines.append({"kind": "evidence", "text": f"{sum(s['records'] for s in new_sources)} records imported from "
                           f"{len(new_sources)} sources in the last {command.since_hours} h: "
                           + ", ".join(f"{s['title']} ({s['records']})" for s in new_sources[:4]) + ".",
                           "href": f"{base}/sources"})

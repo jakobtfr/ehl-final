@@ -27,6 +27,8 @@ const roots = new Set([
   "capabilities",
   "tasks",
   "threads",
+  "sessions",
+  "artifacts",
   "openapi.json",
   "docs",
 ]);

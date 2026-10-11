@@ -5,6 +5,7 @@ import { fmt } from "@/lib/api";
 import { useWorkspace } from "./context";
 import { Empty, ScoreLabel, Status } from "./shared";
 import { SourceMixPanel, useSourceMix } from "./source-mix";
+import { MorningBriefPanel } from "./agent-artifacts";
 
 export function Overview() {
   const { base, scope, requirements, metrics } = useWorkspace();
@@ -65,6 +66,8 @@ export function Overview() {
           </Link>
         ))}
       </div>
+
+      <MorningBriefPanel />
 
       <SourceMixPanel compact />
 

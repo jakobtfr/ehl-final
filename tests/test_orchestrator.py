@@ -173,3 +173,22 @@ def test_sessions_interrupted_by_a_restart_are_closed_at_startup(scope, monkeypa
     closed = scope.get(f"/sessions/{session['id']}").json()
     assert closed["status"] == "failed" and closed["error"] == "Interrupted by an API restart"
     assert scope.post("/sessions", json={"vehicle": "G60", "market": "US", "started_by": PM}).status_code == 201
+
+
+def test_session_provider_overrides_the_planner_for_specialists(scope, fake_llm):
+    target = requirement_ids(scope)[0]
+    plans = iter([plan(agent="challenger", capability="agents.challenge_requirement",
+                       payload={"requirement_id": target, "provider": "deterministic"}),
+                  plan(action="finish")])
+
+    def respond(request):
+        name = request["text"]["format"]["name"]
+        if name == "orchestrator_plan":
+            return next(plans)
+        assert name == "challenge_requirement"
+        return {"counterarguments": [], "missing_evidence": [], "target_realism": "n/a"}
+
+    fake_llm.responder = respond
+    session = start_session(SessionStart(vehicle="G60", market="US", provider="openai", started_by=PM), background=False)
+    challenge = next(a for a in session["artifacts"] if a["kind"] == "challenge")
+    assert challenge["provider"] == "openai"

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bot, Cpu, ShieldCheck, UserCheck } from "lucide-react";
 import { api, date, readable } from "@/lib/api";
 import { useWorkspace } from "./context";
+import { ControlRoom } from "./control-room";
 import { RunsFeed } from "./runs-feed";
 import { Empty, ErrorMessage, Loading, Panel, Status } from "./shared";
 
@@ -96,9 +97,9 @@ export function AgentsPage() {
     <div className="multi-agent-page">
       <h1>Multi-agentic system</h1>
       <p className="agent-lede">
-        An orchestrator plans the work for {scope.vehicle} / {scope.market} and hands bounded tasks to specialist agents. Each agent may
-        call only its registered capabilities, every call is recorded as a run, scoring is deterministic code, and every requirement
-        decision stops at a human PM.
+        A PM&apos;s week compressed into minutes, and every decision still theirs. An orchestrator plans the work for {scope.vehicle} /{" "}
+        {scope.market} and hands bounded tasks to specialist agents. Each agent may call only its registered capabilities, every call is
+        recorded as a run, scoring is deterministic code, and every requirement decision stops at a human PM.
       </p>
 
       <div className="agent-gates">
@@ -112,6 +113,15 @@ export function AgentsPage() {
         </div>
       </div>
 
+      <ControlRoom />
+
+      <details className="agent-registry">
+        <summary>
+          <span>Agent registry</span>
+          <span className="muted">
+            {agents.data ? `${all.length} agents · autonomy levels and granted capabilities` : "Loading…"}
+          </span>
+        </summary>
       <div className="agent-legend">
         {Object.entries(AUTONOMY).map(([level, note]) => (
           <span key={level}>
@@ -144,6 +154,7 @@ export function AgentsPage() {
           </section>
         </>
       )}
+      </details>
 
       <Panel title="Task queue" description={`Bounded tasks the orchestrator or a PM created for ${scope.vehicle} / ${scope.market}, with their status and assigned agent.`}>
         {tasks.error ? (

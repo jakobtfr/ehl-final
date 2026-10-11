@@ -37,6 +37,8 @@ ORCHESTRATOR = "ai:agent:orchestrator"
 PLANNER_PROMPT = "orchestrator-plan-v1"
 REFERENCE_METHOD = "reference-plan-v1"
 MAX_RESULT_CHARS = 1500
+# Specialists whose provider follows the session setting, whatever the planner proposes.
+SESSION_PROVIDER_CAPABILITIES = ("agents.challenge_requirement", "agents.draft_communications")
 DEFAULT_GOAL = "Prepare today's planning review: refresh evidence, update the proposals, challenge the top ones and brief me."
 
 
@@ -73,7 +75,7 @@ PLANNER_INSTRUCTIONS = (
     "evidence requires it. Agents prepare and propose; only the PM decides, so never try to approve, reject or send "
     "anything. A good session refreshes evidence where useful, updates proposals (pipeline.assess_updates when "
     "requirements exist, otherwise pipeline.analyze then pipeline.generate_requirements with the analysis_id it "
-    "returned) with provider 'deterministic' unless the goal asks for AI analysis (whole-scope AI reanalysis is "
+    "returned) with provider 'deterministic' for pipeline steps unless the goal asks for AI analysis (whole-scope AI reanalysis is "
     "slow and costly), derives priority inputs once, challenges the top proposals by requirement_id, plans research "
     "for the gaps, drafts communications for the top requirement, and ends with agents.morning_brief. Finish when the brief "
     "is done or the budget is nearly used. Keep reasoning to one or two sentences the PM can read.")
@@ -270,6 +272,8 @@ def _delegate(session: dict, plan: dict) -> dict:
     capability = CAPABILITIES[plan["capability"]]
     if "session_id" in capability.input_model.model_fields:
         payload["session_id"] = session["id"]
+    if plan["capability"] in SESSION_PROVIDER_CAPABILITIES:
+        payload["provider"] = session["budgets"]["agent_provider"]  # the PM chose the specialists' provider
     task = create_task(TaskCreate(vehicle=session["vehicle"], market=session["market"], capability=plan["capability"],
                                   title=f"{plan['reasoning'][:200]}", input=payload, requested_by=ORCHESTRATOR,
                                   assigned_agent_id=agent_id))

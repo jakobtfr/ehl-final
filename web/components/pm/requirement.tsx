@@ -64,13 +64,21 @@ import {
   useUrlState,
 } from "./shared";
 import { RequirementSourceMix } from "./source-mix";
+import { RequirementAgentWork } from "./agent-artifacts";
 function criterionTarget(c: Criterion) {
   const unit = String(c.target).trim().endsWith("%")
     ? (c.unit || "").replace(/^%\s*/, "")
     : c.unit || "";
   return `${c.target} ${unit}`.trim();
 }
-const tabs = ["requirement", "evidence", "score", "versions", "history"];
+const tabs = [
+  "requirement",
+  "evidence",
+  "score",
+  "challenges",
+  "versions",
+  "history",
+];
 export function RequirementDrawer({
   deepRequirement,
   deepTab,
@@ -267,7 +275,9 @@ function RequirementDetail({
               ? "Requirement"
               : key === "evidence"
                 ? "Evidence trace"
-                : readable(key)}
+                : key === "challenges"
+                  ? "Challenges & drafts"
+                  : readable(key)}
           </button>
         ))}
       </nav>
@@ -363,6 +373,13 @@ function RequirementDetail({
             version={v}
             requirementId={id}
             readOnly={archived}
+          />
+        )}
+        {tab === "challenges" && (
+          <RequirementAgentWork
+            requirementId={id}
+            requirementKey={req.key}
+            currentVersionId={req.current_version.id}
           />
         )}
         {tab === "versions" && <Versions req={req} />}

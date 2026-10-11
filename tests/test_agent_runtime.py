@@ -5,8 +5,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from fastapi import HTTPException
+from pydantic import BaseModel
 
-from database.store import connect, transaction
+from database.store import connect, encode, transaction
 from server import agent_runtime as runtime
 from server.models import Scope
 from server.platform import CAPABILITIES, Capability, record_run
@@ -124,6 +125,91 @@ def test_analysis_id_does_not_cross_task_scope(client):
     result = client.post("/tasks", json={"capability": "pipeline.generate_requirements", "title": "Simulated",
                                         "requested_by": "human:pm", "input": {"analysis_id": analysis.json()["id"]}})
     assert result.status_code == 422
+
+
+@pytest.mark.parametrize("name", ["signals.refresh_watchlist", "signals.backfill_watchlist"])
+def test_watchlist_task_scope_is_checked_on_create_edit_execution_and_retry(client, monkeypatch, name):
+    calls = []
+    original = CAPABILITIES[name]
+    monkeypatch.setitem(CAPABILITIES, name, Capability(
+        name, original.description, original.input_model,
+        lambda command, actor: calls.append(command.watchlist_id) or {"watchlist_id": command.watchlist_id},
+        original.autonomy_level, original.writes))
+    def watchlist(market):
+        response = client.post("/signals/watchlists", json={"vehicle": "G60", "market": market,
+            "topic": "comfort", "label": f"Simulated {market} watch", "actor": "human:pm", "rationale": "Test"})
+        assert response.status_code == 201, response.text
+        return response.json()["id"]
+    own, other = watchlist("US"), watchlist("CN")
+    for watchlist_id in (other, "missing-watchlist"):
+        response = client.post("/tasks", json={"vehicle": "G60", "market": "US", "capability": name,
+            "title": "Simulated", "requested_by": "human:pm", "input": {"watchlist_id": watchlist_id}})
+        assert response.status_code == 422
+    item = task(client, name, input={"watchlist_id": own})
+    response = client.patch(f"/tasks/{item['id']}", json={"actor": "human:pm",
+        "expected_revision": item["revision"], "input": {"watchlist_id": other}})
+    assert response.status_code == 422
+    # Simulate a queued task whose persisted reference has drifted since validation.
+    with transaction() as connection:
+        connection.execute("UPDATE tasks SET input=?, revision=revision+1 WHERE id=?",
+                           (encode({"watchlist_id": other}), item["id"]))
+    failed = execute(client, item).json()
+    assert failed["status"] == "failed" and "another task scope" in failed["error"]
+    assert client.get(f"/runs/{failed['last_run_id']}").json()["status"] == "failed"
+    assert calls == []
+    repaired = client.patch(f"/tasks/{item['id']}", json={"actor": "human:pm",
+        "expected_revision": failed["revision"], "input": {"watchlist_id": own}})
+    assert repaired.status_code == 200, repaired.text
+    assert execute(client, repaired.json()).json()["status"] == "succeeded"
+    assert calls == [own]
+
+
+def test_other_id_only_capabilities_bind_referenced_scope(client, monkeypatch):
+    imported = import_feedback(client, [("Simulated comfort", "comfort", "problem")], market="CN")
+    source_id = imported["source_id"]
+    name = "market_data.extract_report_context"
+    original = CAPABILITIES[name]
+    monkeypatch.setitem(CAPABILITIES, name, Capability(
+        name, original.description, original.input_model, lambda command, actor: {"source_id": command.source_id},
+        original.autonomy_level, original.writes))
+    rejected = client.post("/tasks", json={"capability": name, "title": "Simulated",
+        "requested_by": "human:pm", "input": {"source_id": source_id}})
+    assert rejected.status_code == 422
+    item = task(client, name, market="CN", input={"source_id": source_id})
+    assert execute(client, item).json()["status"] == "succeeded"
+
+
+def test_conflict_brief_task_requires_member_market_and_vehicle(client, monkeypatch):
+    with record_run(None, "test.fixture", "human:pm", "test-v1", {}, "G60", "US") as run:
+        pass
+    with transaction() as connection:
+        connection.execute("INSERT INTO market_conflicts (id,vehicle,topic,markets,conflict_type,severity,metrics,"
+            "evidence_ids,requirement_ids,recommendation,rationale,fingerprint,method_version,run_id,created_at) "
+            "VALUES ('simulated-conflict','G60','comfort','[\"US\",\"CN\"]','evidence_gap','medium','{}','{}','[]',"
+            "'needs_research','Simulated','simulated-fingerprint','test-v1',?,'2026-01-01T00:00:00Z')", (run.id,))
+    name = "markets.draft_conflict_brief"
+    original = CAPABILITIES[name]
+    monkeypatch.setitem(CAPABILITIES, name, Capability(
+        name, original.description, original.input_model, lambda command, actor: {"conflict_id": command.conflict_id},
+        original.autonomy_level, original.writes))
+    for vehicle, market in (("G60", "DE"), ("G70", "US")):
+        response = client.post("/tasks", json={"vehicle": vehicle, "market": market, "capability": name,
+            "title": "Simulated", "requested_by": "human:pm", "input": {"conflict_id": "simulated-conflict"}})
+        assert response.status_code == 422
+    item = task(client, name, market="CN", input={"conflict_id": "simulated-conflict"})
+    assert execute(client, item).json()["status"] == "succeeded"
+
+
+def test_unreviewed_id_only_capability_fails_closed(client, monkeypatch):
+    class NewInput(BaseModel):
+        item_id: str
+
+    monkeypatch.setitem(CAPABILITIES, "test.id_only", Capability(
+        "test.id_only", "Synthetic unreviewed reference", NewInput, lambda command, actor: {}, "A0", ()))
+    response = client.post("/tasks", json={"capability": "test.id_only", "title": "Simulated",
+        "requested_by": "human:pm", "input": {"item_id": "some-record"}})
+    assert response.status_code == 422
+    assert "no reviewed ID scope rule" in response.text
 
 
 def test_scheduler_once_per_due_slot_and_pause(client, capability):

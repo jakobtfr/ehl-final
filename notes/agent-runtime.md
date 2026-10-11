@@ -11,6 +11,14 @@ Create a task with `vehicle`, `market`, `capability`, `title`, `requested_by` an
 automatically. Input cannot override the executing actor. Scope fields and analysis references must
 match the task scope. Child tasks preserve their parent's scope.
 
+ID-only task inputs are resolved against their persisted record when a task is created, edited and
+executed (including scheduled occurrences and retries). Analysis, watchlist and source references
+must match the task's vehicle and market exactly. A market-conflict brief may use a conflict only when
+the task vehicle matches and its market is one of the conflict's recorded markets. Missing references
+and ID-only capabilities without a reviewed scope rule fail closed. A scope failure during execution
+becomes a failed task and run before the capability handler runs; repair the input and retry. Direct
+capability endpoints retain their own validation and do not acquire a task scope from this guard.
+
 Tasks follow `backlog → queued → running → succeeded|failed|awaiting_human`. PATCH takes
 `expected_revision`; stale writes and duplicate concurrent executions return 409. A capability error
 is a completed HTTP request with `status: failed`, its error, and a failed persisted run. Consumers

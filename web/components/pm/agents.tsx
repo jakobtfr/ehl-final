@@ -37,10 +37,10 @@ type Page<T> = { items: T[]; total?: number };
 
 /** Mirrors AUTONOMY_NOTES in server/agent_runtime.py. */
 const AUTONOMY: Record<string, string> = {
-  A0: "Runs autonomously",
-  A1: "Proposes; a PM reviews the result",
-  A2: "Its proposals need a human accept",
-  A3: "Drafts only; a human acts",
+  A0: "Runs automatically",
+  A1: "PM reviews results",
+  A2: "Needs PM approval",
+  A3: "Prepares drafts for a PM",
 };
 
 function AgentCard({ agent }: { agent: Agent }) {
@@ -59,7 +59,7 @@ function AgentCard({ agent }: { agent: Agent }) {
       <p>{agent.description}</p>
       <div className="agent-meta">
         <span className="mono">
-          {agent.kind === "system" ? "Deterministic code" : [agent.provider, agent.effective_model].filter(Boolean).join(" · ") || "No model"}
+          {agent.kind === "system" ? "Rule-based process" : [agent.provider, agent.effective_model].filter(Boolean).join(" · ") || "No model"}
         </span>
         <Status value={agent.status} />
       </div>
@@ -72,7 +72,7 @@ function AgentCard({ agent }: { agent: Agent }) {
           ))}
         </ul>
       ) : (
-        <p className="muted agent-nocap">Delegates and reviews; calls no capability itself.</p>
+        <p className="muted agent-nocap">Assigns work and reviews results.</p>
       )}
     </article>
   );
@@ -95,21 +95,20 @@ export function AgentsPage() {
 
   return (
     <div className="multi-agent-page">
-      <h1>Multi-agentic system</h1>
+      <h1>Agents</h1>
       <p className="agent-lede">
-        A PM&apos;s week compressed into minutes, and every decision still theirs. An orchestrator plans the work for {scope.vehicle} /{" "}
-        {scope.market} and hands bounded tasks to specialist agents. Each agent may call only its registered capabilities, every call is
-        recorded as a run, scoring is deterministic code, and every requirement decision stops at a human PM.
+        Agents prepare the planning review for {scope.vehicle} / {scope.market}: they research, propose, challenge and
+        draft. Every decision stays with you.
       </p>
 
       <div className="agent-gates">
         <div>
           <ShieldCheck size={16} />
-          <span>Capability permissions are enforced by the API, not by prompts.</span>
+          <span>Each agent has a defined set of tools.</span>
         </div>
         <div>
           <UserCheck size={16} />
-          <span>The database rejects approvals from AI or system actors.</span>
+          <span>PMs approve or reject requirements.</span>
         </div>
       </div>
 
@@ -133,12 +132,12 @@ export function AgentsPage() {
       {agents.error ? (
         <ErrorMessage error={agents.error} retry={() => void agents.refetch()} />
       ) : agents.isPending ? (
-        <Loading label="Loading the agent registry…" />
+        <Loading label="Loading agents…" />
       ) : (
         <>
           {orchestrator && (
             <section className="agent-tier">
-              <h2>Orchestrator</h2>
+              <h2>Planning coordinator</h2>
               <div className="agent-grid agent-grid-single">
                 <AgentCard agent={orchestrator} />
               </div>
@@ -156,19 +155,19 @@ export function AgentsPage() {
       )}
       </details>
 
-      <Panel title="Task queue" description={`Bounded tasks the orchestrator or a PM created for ${scope.vehicle} / ${scope.market}, with their status and assigned agent.`}>
+      <Panel title="Task queue" description={`Scheduled work for ${scope.vehicle} / ${scope.market}, with each task’s progress and assigned agent.`}>
         {tasks.error ? (
           <ErrorMessage error={tasks.error} retry={() => void tasks.refetch()} />
         ) : tasks.isPending ? (
           <Loading />
         ) : !tasks.data.items.length ? (
-          <Empty title="No tasks in this scope" description="Tasks appear here when the orchestrator or a PM schedules work." />
+          <Empty title="No tasks yet" description="Tasks appear when an agent or PM schedules work." />
         ) : (
           <table className="agent-tasks">
             <thead>
               <tr>
                 <th>Task</th>
-                <th>Capability</th>
+                <th>Action</th>
                 <th>Agent</th>
                 <th>Requested by</th>
                 <th>Status</th>

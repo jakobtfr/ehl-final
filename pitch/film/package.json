@@ -1,0 +1,25 @@
+{
+  "name": "bmw-pitch-film",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "capture": "node scripts/capture.mjs",
+    "audio": "node scripts/generate-audio.mjs",
+    "render": "remotion render src/index.ts Film out/pitch-film.mp4 --codec h264 --crf 16 && node scripts/finalize.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.300",
+    "@remotion/media-utils": "^4.0.300",
+    "@types/react": "^19.3.0",
+    "dotenv": "^18.0.7",
+    "playwright-core": "^1.64.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "^4.0.300",
+    "simple-icons": "^16.34.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

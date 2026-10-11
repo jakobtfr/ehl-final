@@ -147,3 +147,36 @@ def register_agent_tools(mcp, api_request, identifier):
         internal; nothing is ever sent externally. Agents post as 'agent' or 'tool', never as 'human'."""
         return await api_request("POST", f"/threads/{identifier(thread_id)}/messages", payload=_present(
             author=author, role=role, body=body, payload=payload, run_id=run_id))
+
+    @mcp.tool()
+    async def start_agent_session(started_by: str, vehicle: str = "G60", market: str = "US",
+                                  goal: str | None = None, provider: Literal["reference", "openai"] = "reference",
+                                  max_steps: int = 12, challenge_top: int = 3) -> dict:
+        """Ask the orchestrator to run the agent team for a scope; it delegates through tasks and ends with a brief.
+
+        started_by is the human PM who asked for the session (AI and system identities are refused). The session
+        runs in the background: poll get_agent_session. No agent can approve, reject or send anything.
+        """
+        return await api_request("POST", "/sessions", payload=_present(
+            started_by=started_by, vehicle=vehicle, market=market, goal=goal, provider=provider,
+            max_steps=max_steps, challenge_top=challenge_top))
+
+    @mcp.tool()
+    async def list_agent_sessions(vehicle: str | None = None, market: str | None = None, limit: int = 20) -> dict:
+        """List orchestrator sessions, newest first, with status, usage and summary."""
+        return await api_request("GET", "/sessions", params=_present(vehicle=vehicle, market=market, limit=limit))
+
+    @mcp.tool()
+    async def get_agent_session(session_id: str) -> dict:
+        """Read one session: its append-only step log (plans, delegations, policy rejections) and its artifacts."""
+        return await api_request("GET", f"/sessions/{identifier(session_id)}")
+
+    @mcp.tool()
+    async def list_agent_artifacts(vehicle: str | None = None, market: str | None = None,
+                                   kind: Literal["challenge", "research_brief", "audience_drafts", "morning_brief"] | None = None,
+                                   requirement_id: str | None = None, session_id: str | None = None,
+                                   limit: int = 20) -> dict:
+        """List immutable agent outputs (challenges, research briefs, never-sent audience drafts, morning briefs)."""
+        return await api_request("GET", "/artifacts", params=_present(
+            vehicle=vehicle, market=market, kind=kind, requirement_id=requirement_id, session_id=session_id,
+            limit=limit))

@@ -26,3 +26,11 @@ The scope is a governed local PM system: agents prepare work; humans decide; dra
 
 Live email/Teams/Jira, enterprise SSO and external publishing remain roadmap items. API actor identities
 are explicit local declarations under the existing prototype contract, not authenticated enterprise users.
+
+## Status (11 October 2026)
+
+Steps 2 and 3 are implemented: orchestrator sessions with an OpenAI planner and a labelled reference planner,
+code-enforced delegation through the task runtime, and challenger, research planner, comms drafter and morning
+brief artifacts (migration 0016). See [agent orchestration](notes/agent-orchestration.md) for the design,
+safeguards and measured runs. Step 4's control room is in progress in `web/`. Resuming an interrupted session is
+not implemented.

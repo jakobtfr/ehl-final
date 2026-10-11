@@ -51,6 +51,7 @@ actors in the API and the database.
 | `/requests` | Request inbox from markets, dealers and engineering: classification, clustering, triage, position drafts, human decisions | [request intake](notes/request-intake.md) |
 | `/priorities` | Rubric `customer-priority-v2` with data-derived factors, a human rubric switch, sensitivity and a cross-market portfolio | [prioritization v2](notes/prioritization-v2.md) |
 | `/agents`, `/capabilities`, `/tasks`, `/runs`, `/threads` | Agent registry, capability execution, task board, recurring tasks, run log and threads | [agent runtime](notes/agent-runtime.md) |
+| `/sessions`, `/artifacts` | Orchestrator sessions: a PM states a goal, the orchestrator delegates validated steps to the agents through tasks; challenges, research briefs, never-sent audience drafts and the morning brief | [agent orchestration](notes/agent-orchestration.md) |
 
 The web workspace has matching Signals, Requests, Priorities and Market balancer screens and a runs
 feed on Pipeline. Import the BMW data once, then derive weights, preserve list and coverage:

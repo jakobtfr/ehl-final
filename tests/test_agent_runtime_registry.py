@@ -21,6 +21,9 @@ POD_CAPABILITIES = {
     "priorities.derive_inputs", "priorities.rank", "priorities.sensitivity", "market_data.import_bmw",
     "market_data.derive_weights", "market_data.derive_preserve", "market_data.coverage",
     "pipeline.analyze", "pipeline.generate_requirements", "pipeline.assess_updates",
+    # 0016: specialist outputs and public data connectors
+    "agents.challenge_requirement", "agents.research_brief", "agents.draft_communications", "agents.morning_brief",
+    "public_sources.import_nhtsa", "public_sources.web_research",
 }
 
 
@@ -45,7 +48,8 @@ def test_registry_seeds_the_roster_as_a_hierarchy(db):
     assert all(row["status"] == "active" and row["model"] is None for row in agents.values())
     granted = {name for row in agents.values() for name in json.loads(row["capabilities"])}
     assert granted == POD_CAPABILITIES
-    assert json.loads(agents["orchestrator"]["capabilities"]) == []  # plans and delegates, runs nothing itself
+    # Plans and delegates; its only own capability is compiling the morning brief (0016).
+    assert json.loads(agents["orchestrator"]["capabilities"]) == ["agents.morning_brief"]
 
 
 def test_seeded_agents_are_registered_actors(db):

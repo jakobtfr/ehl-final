@@ -13,6 +13,7 @@ from pydantic import Field, model_validator
 
 from database.store import create_source, get_source, init_database, list_sources, ping_database
 from server import agent_runtime
+from server.agent_work import router as artifacts_router
 from server.analysis_engine import AnalysisError, ProviderUnavailable
 from server.decision_briefs import router as decision_briefs_router
 from server.evaluation import router as evaluation_router
@@ -24,6 +25,7 @@ from server.llm import LLMOutputInvalid
 from server.market_data import router as market_data_router
 from server.markets import router as markets_router
 from server.models import Scope, json_size
+from server.orchestrator import router as sessions_router
 from server.pipeline import router as pipeline_router
 from server.platform import HUMAN_REQUIRED
 from server.prioritization import router as prioritization_router
@@ -85,6 +87,8 @@ app.include_router(intake_router)
 app.include_router(prioritization_router)
 app.include_router(market_data_router)
 app.include_router(public_sources_router)
+app.include_router(artifacts_router)
+app.include_router(sessions_router)
 for runtime_router in agent_runtime.routers:
     app.include_router(runtime_router)
 app.router.route_class = ImportRoute

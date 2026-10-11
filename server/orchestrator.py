@@ -50,6 +50,8 @@ class SessionStart(Scope):
     challenge_top: int = Field(default=3, ge=0, le=8)
     agent_provider: Literal["openai", "deterministic"] | None = Field(
         default=None, description="Provider for the challenger and drafter; defaults to the planner's")
+    team: Literal["core", "all"] = Field(
+        default="core", description="'all' briefs every roster agent: each gets a safe step or a recorded stand-by note")
 
 
 class SessionStop(BaseModel):
@@ -78,7 +80,8 @@ PLANNER_INSTRUCTIONS = (
     "returned) with provider 'deterministic' for pipeline steps unless the goal asks for AI analysis (whole-scope AI reanalysis is "
     "slow and costly), derives priority inputs once, challenges the top proposals by requirement_id, plans research "
     "for the gaps, drafts communications for the top requirement, and ends with agents.morning_brief. Finish when the brief "
-    "is done or the budget is nearly used. Keep reasoning to one or two sentences the PM can read.")
+    "is done or the budget is nearly used. When brief_every_agent is true, give every active roster agent at least one "
+    "useful step it can run in this scope before the brief. Keep reasoning to one or two sentences the PM can read.")
 
 
 # Records --------------------------------------------------------------------------------------------
@@ -182,8 +185,10 @@ def scope_context(vehicle: str, market: str) -> dict:
 
 def reference_plan(session: dict, history: list[dict], context: dict) -> dict:
     """Deterministic plan: the next step not yet done in a fixed, state-aware sequence."""
-    done = {(s["detail"].get("capability"), s["detail"].get("input", {}).get("requirement_id"))
+    done = {(s["detail"].get("capability"), (s["detail"].get("input") or {}).get("requirement_id"))
             for s in history if s["kind"] in ("delegate", "rejected")}
+    done |= {("standby", s["detail"]["standby"]) for s in history if s["kind"] == "plan" and s["detail"].get("standby")}
+    team = session["budgets"].get("team") == "all"
     capabilities = [s["detail"].get("capability") for s in history if s["kind"] == "delegate" and s["status"] != "failed"]
     agent_provider = session["budgets"]["agent_provider"]
     plan = []
@@ -193,6 +198,12 @@ def reference_plan(session: dict, history: list[dict], context: dict) -> dict:
     if context["connectors_available"].get("web_research") and agent_provider == "openai":
         plan.append(("trend-scout", "public_sources.web_research", {"max_per_topic": 4},
                      "Look for new owner and press opinions on the public web."))
+    elif team:
+        plan.append(("trend-scout", "signals.summarise", {"provider": "deterministic"},
+                     "Summarise the recorded weekly sentiment series for this scope."))
+    if team:
+        plan.append(("competitor-analyst", None, None,
+                     "Stand by: competitor scans need a PM-authorised watchlist and charged public search calls."))
     if context["top_requirements"]:
         plan.append(("change-watcher", "pipeline.assess_updates", {"provider": "deterministic"},
                      "Reassess all evidence against current proposals and approved baselines."))
@@ -204,11 +215,24 @@ def reference_plan(session: dict, history: list[dict], context: dict) -> dict:
         if analysis or "pipeline.analyze" not in capabilities:
             plan.append(("requirement-writer", "pipeline.generate_requirements", {"analysis_id": analysis},
                          "Draft SMART requirement proposals from the findings."))
+    if team and context["top_requirements"]:
+        plan.append(("requirement-writer", None, None,
+                     "Stand by: requirements exist, so the change watcher proposes revisions instead of new drafts."))
+    if team:
+        plan.append(("market-balancer", "markets.compare", {},
+                     "Compare topics across markets with sales weights for this vehicle."))
+        plan.append(("market-balancer", "markets.detect_conflicts", {"provider": "deterministic"},
+                     "Detect cross-market conflicts and propose sales-weighted recommendations."))
+        plan.append(("request-triage", "requests.triage", {},
+                     "Rank inbound market, dealer and engineering requests with the triage rubric."))
     plan.append(("scorer", "priorities.derive_inputs", {}, "Derive data-based priority inputs for the current versions."))
     for requirement in context["top_requirements"][:session["budgets"]["challenge_top"]]:
         plan.append(("challenger", "agents.challenge_requirement",
                      {"requirement_id": requirement["requirement_id"], "provider": agent_provider},
                      f"Challenge {requirement['key']} before the PM decides."))
+    if team:
+        plan.append(("research-planner", "market_data.coverage", {},
+                     "Measure evidence coverage and representativeness before planning research."))
     plan.append(("research-planner", "agents.research_brief", {}, "Turn the challenges into proposed studies."))
     if context["top_requirements"]:
         top = next((r for r in context["top_requirements"] if r["approved"]), context["top_requirements"][0])
@@ -216,6 +240,10 @@ def reference_plan(session: dict, history: list[dict], context: dict) -> dict:
                      {"requirement_id": top["requirement_id"], "provider": agent_provider},
                      f"Draft the four audience messages for {top['key']}; nothing is sent."))
     for agent, capability, payload, reason in plan:
+        if capability is None:
+            if ("standby", agent) not in done:
+                return {"action": "standby", "agent": agent, "reasoning": reason}
+            continue
         if (capability, payload.get("requirement_id")) not in done:
             if capability == "pipeline.generate_requirements" and not payload["analysis_id"]:
                 return {"action": "finish", "reasoning": "Analysis produced no analysis id; stopping before drafting.",
@@ -231,6 +259,7 @@ def openai_plan(client, run, session: dict, history: list[dict], context: dict, 
                                schema=_Step, run=run, max_output_tokens=4000, input={
                                    "goal": session["goal"], "scope": context, "roster": team,
                                    "agent_provider": session["budgets"]["agent_provider"], "steps_left": steps_left,
+                                   "brief_every_agent": session["budgets"].get("team") == "all",
                                    "history": [{"seq": s["seq"], "kind": s["kind"], "agent": s["agent_id"],
                                                 "title": s["title"], "status": s["status"],
                                                 "capability": s["detail"].get("capability"),
@@ -323,6 +352,10 @@ def _loop(session_id: str) -> None:
                 plan = openai_plan(client, run, session, history, context, team)
                 usage["planner_calls"] += 1
                 usage["total_tokens"] = run.metrics.get("llm", {}).get("total_tokens", 0)
+            if plan["action"] == "standby":
+                _add_step(session_id, f"ai:agent:{plan['agent']}", "plan", plan["reasoning"], "info",
+                          {"reasoning": plan["reasoning"], "standby": plan["agent"]})
+                continue
             if plan["action"] == "finish":
                 _add_step(session_id, ORCHESTRATOR, "plan", plan.get("reasoning") or "Finishing", "info",
                           {"reasoning": plan.get("reasoning")})
@@ -408,7 +441,7 @@ def start_session(command: SessionStart, background: bool = True) -> dict:
                "provider": command.provider, "model": model, "method_version": method, "status": "running",
                "started_by": command.started_by,
                "budgets": encode({"max_steps": command.max_steps, "challenge_top": command.challenge_top,
-                                  "agent_provider": agent_provider}),
+                                  "agent_provider": agent_provider, "team": command.team}),
                "created_at": timestamp, "updated_at": timestamp}
     with transaction() as connection:
         connection.execute(f"INSERT INTO agent_sessions ({','.join(session)}) VALUES ({','.join('?' for _ in session)})",
@@ -417,7 +450,7 @@ def start_session(command: SessionStart, background: bool = True) -> dict:
               after={**session, "budgets": json.loads(session["budgets"])})
     _add_step(session["id"], ORCHESTRATOR, "plan", f"Goal from {command.started_by}: {command.goal}", "info",
               {"planner": command.provider, "model": model, "agent_provider": agent_provider,
-               "max_steps": command.max_steps})
+               "max_steps": command.max_steps, "team": command.team})
     if background:
         threading.Thread(target=run_session, args=(session["id"],), daemon=True, name=f"session-{session['id'][:8]}").start()
     else:

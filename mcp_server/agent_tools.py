@@ -151,15 +151,18 @@ def register_agent_tools(mcp, api_request, identifier):
     @mcp.tool()
     async def start_agent_session(started_by: str, vehicle: str = "G60", market: str = "US",
                                   goal: str | None = None, provider: Literal["reference", "openai"] = "reference",
-                                  max_steps: int = 12, challenge_top: int = 3) -> dict:
+                                  max_steps: int = 12, challenge_top: int = 3,
+                                  team: Literal["core", "all"] = "core") -> dict:
         """Ask the orchestrator to run the agent team for a scope; it delegates through tasks and ends with a brief.
+
+        team='all' briefs every roster agent: each gets a safe step or a recorded stand-by note (use max_steps 25).
 
         started_by is the human PM who asked for the session (AI and system identities are refused). The session
         runs in the background: poll get_agent_session. No agent can approve, reject or send anything.
         """
         return await api_request("POST", "/sessions", payload=_present(
             started_by=started_by, vehicle=vehicle, market=market, goal=goal, provider=provider,
-            max_steps=max_steps, challenge_top=challenge_top))
+            max_steps=max_steps, challenge_top=challenge_top, team=team))
 
     @mcp.tool()
     async def list_agent_sessions(vehicle: str | None = None, market: str | None = None, limit: int = 20) -> dict:

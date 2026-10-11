@@ -192,3 +192,23 @@ def test_session_provider_overrides_the_planner_for_specialists(scope, fake_llm)
     session = start_session(SessionStart(vehicle="G60", market="US", provider="openai", started_by=PM), background=False)
     challenge = next(a for a in session["artifacts"] if a["kind"] == "challenge")
     assert challenge["provider"] == "openai"
+
+
+def test_whole_team_session_briefs_every_agent(scope, db):
+    session = start_session(SessionStart(vehicle="G60", market="US", started_by=PM, challenge_top=1, team="all",
+                                         max_steps=25), background=False)
+    assert session["status"] == "succeeded", session["error"]
+    assert session["budgets"]["team"] == "all"
+    delegated = [s for s in session["steps"] if s["kind"] == "delegate"]
+    standby = [s for s in session["steps"] if s["kind"] == "plan" and s["detail"].get("standby")]
+    capabilities = [s["detail"]["capability"] for s in delegated]
+    assert {"signals.summarise", "markets.compare", "markets.detect_conflicts", "requests.triage",
+            "market_data.coverage"} <= set(capabilities)
+    assert {s["detail"]["standby"] for s in standby} == {"competitor-analyst", "requirement-writer"}
+    assert all(s["agent_id"].endswith(s["detail"]["standby"]) and s["status"] == "info" for s in standby)
+    assert capabilities[-1] == "agents.morning_brief"
+    roster = {agent["id"] for agent in scope.get("/agents?limit=200").json()["items"] if agent["status"] == "active"}
+    assert {s["agent_id"] for s in delegated + standby} == roster
+    assert len(capabilities) == len({str((s["detail"]["capability"], s["detail"]["input"])) for s in delegated})
+    with sqlite3.connect(db) as connection:
+        assert connection.execute("SELECT count(*) FROM decisions").fetchone()[0] == 0

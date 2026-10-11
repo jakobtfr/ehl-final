@@ -58,7 +58,7 @@ second fallback. No recorded live run exists yet.
 
 ## Q&A
 
-Answer in under 30 seconds: the number first, the caveat second. Use the
+Q&A is 1 minute, so expect one or two questions (Bene_BMW, 11 October 11:34). The 3:00 limit is strict. Answer in under 30 seconds: the number first, the caveat second. Use the
 [Q&A card](bmw-demo-qa.md). Two backup slides support common questions:
 
 - **B6 Built today, pilot next:** for “what didn't you build?”, Codebeamer, SSO or scale.

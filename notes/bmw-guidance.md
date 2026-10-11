@@ -1,6 +1,6 @@
 # BMW team guidance
 
-BMW team posts from 10 October 2026, in chronological order, plus the participant questions they answer. Times are Europe/Berlin. Text is preserved in full; attached files are linked below. Posts from 17:17 onward were pasted from the channel without message links, so their times are to the minute.
+BMW team posts from 10 and 11 October 2026, in chronological order, plus the participant questions they answer. Times are Europe/Berlin. Text is preserved in full; attached files are linked below. Posts from 17:17 onward were pasted from the channel without message links, so their times are to the minute.
 
 ## 10:37:32 — ThomasFremuthBMW
 
@@ -191,3 +191,77 @@ We do not have 3D assets but the configurator on the BMW website has 360 exterio
 [Sketchfab collection: BMW base models by ddiaz-design](https://sketchfab.com/ddiaz-design/collections/bmw-base-models-c707bb093b9c433180439b9c96b618d5)
 
 Another source
+
+# 11 October 2026 — pitch day
+
+Posts from the pitch-day channel, pasted without message links, so times are to the minute. Participant questions are kept because BMW's answers depend on them. Text is preserved in full, including typos.
+
+**Summary:** each team gets exactly 3 minutes, and the demo counts inside them. Bene_BMW asked for few slides and a focus on the demo. The demo can be live or recorded; BMW prefers live and wants a walk-through from requirement gathering to documentation, with the why and how of the approach. At 11:34 Bene_BMW set Q&A to 1 minute, replacing the 3 minutes given at 09:52 and on 10 October. The timeline is strict, so plan to finish inside 3:00. Team EHL's slot was posted as 12:00.
+
+## 09:12 — itsmeYAW (participant question)
+
+Hi, is someone from BMW on the site?
+
+## 09:43 — Bene_BMW
+
+yes!
+we are coming in the rooms, or you find us downstairs at the coffee maker
+
+## 09:45 — Bene_BMW
+
+All of you. We have 2,5 hours - 3 mins pitch, 3mins demo
+
+## 09:45 — Astavicious (participant question)
+
+Is the demo live or recorded?
+
+## 09:48 — Bene_BMW
+
+Ideally, we’d love to see a live demo of your apps. You can submit a PDF, but the best way for us to truly understand your app is a walk-through that covers everything—from requirement gathering all the way to documentation. During the demo, just give us a quick breakdown of the why and how behind your approach.
+
+Demo can be live or recorded. Up to you!
+
+Do you have any questions for us?
+
+## 09:48 — 𝕺𝖑𝖊𝖐𝖘0𝖎𝖗 (participant question)
+
+What? Dont we have like 3 mins pitch w demo + 3 mins for questions?
+We and some other teams are under impression it`s what the notion says
+
+## 09:52 — Bene_BMW
+
+3 mins for your pitch - please don't prepare too much slides, focus on your demo
+after your pitch, we will have a FAQ session of 3 minutes.
+
+## 09:54 — 𝕺𝖑𝖊𝖐𝖘0𝖎𝖗 (participant question)
+
+Oh okay. So just to get it right: demo is included in those 3 mins of pitching?
+
+## 09:54 — Bene_BMW
+
+yes
+
+## 11:26 — 𝕺𝖑𝖊𝖐𝖘0𝖎𝖗 (participant question)
+
+Hey, what if at the mark of the 3rd minute we are literally on the "Summing up..." + 10 secs max - will we be stopped mid sentence or can we finish pitch? Will this force a points deduction onto us?
+
+## 11:34 — Bene_BMW
+
+Since we have a large number of teams today, we have to stick strictly to the timeline: each team has exactly 3 minutes for their pitch, followed by 1 minute for Q&A (as Elisabeth mentioned).
+
+## 11:40 — troy rivera (participant question)
+
+where can we get the order?
+(btw I am stuck in traffic because there is a marathon today, I might get there a bit late. Team: bussies)
+
+## 11:44 — Bene_BMW
+
+does EHL Team at 12:00
+
+## 12:18 — ThomasFremuthBMW
+
+Good Luck for your pitches! We are excited to see your solutions
+
+## 12:21 — kolyyyyyyya (participant question)
+
+genuinely WHERE is the the team order

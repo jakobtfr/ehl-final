@@ -35,9 +35,8 @@ multi-agent system. These are rehearsal targets; no presenter has timed them yet
 | 0:15–0:30 | **Pipeline 1** | Press → when the presenter finishes. | The pipeline: collect feedback and public sources, link every row word for word, propose requirements, score priority beside evidence grade, and the PM decides; new evidence reopens only affected proposals. |
 | 0:30–0:40 | **Pipeline 2** (three questions) | Switch to the app tab at the end. | “Every requirement has to survive three questions. Where did it come from? How sure are we? What changed since we decided? Here's the G60 i5 in the US, live.” |
 | 0:40–2:15 | **App demo**: overview → `REQ-G60-US-001` → Evidence Trace → row 432 → Score → decision → simulated update → Versions | As in the beats below. | Trace, score and grade, the presenter's own decision, then the one reopened proposal (+0.07). |
-| 2:15–2:30 | **V2 trailer** | Switch to the deck tab, press → once: it opens V2 and plays it. The deck moves to Agents when it ends. | Nothing. |
-| 2:30–2:40 | **Agents** | Press → when done. | “An orchestrator plans one step at a time and delegates to scoped specialist agents. Every step is a recorded task, and no agent can approve.” |
-| 2:40–2:50 | **Close** | — | “Agents prepare. Product managers decide.” |
+| 2:15–2:30 | **V2 trailer** | Switch to the deck tab, press → once: it opens V2 and plays it. The deck moves to the close when it ends. | Nothing. |
+| 2:30–2:45 | **Close** | — | “An orchestrator plans each step and delegates to scoped specialist agents; every step is recorded and no agent can approve. Agents prepare. Product managers decide.” |
 
 Demo beats and their lines, compressed from the earlier script: overview (4,365 rows, about 73% of
 feedback IDs from one source, so samples, not market share); charging proposal → Evidence Trace → row 432
@@ -50,23 +49,18 @@ reopened, 71.26 → 71.33, approved version frozen).
 
 1. **Running more than 10 seconds late at 1:35:** shorten the overview to “4,365 rows, 73% from one source, so samples, not market share.”
 2. **The update script takes more than 10 seconds:** keep talking through the decision line. Time it in rehearsal and type the command in the terminal beforehand.
-3. **The presenter does not approve after reviewing:** stop before the update. Switch to the deck, press `B` and go to **B5**: “In our rehearsal, new input reopened only this proposal.” Say that it was a rehearsal.
+3. **The presenter does not approve after reviewing:** stop before the update and say: “In our rehearsal, new input reopened only this proposal.” Say that it was a rehearsal.
 4. **Never** let anyone but the presenter make the decision, and never describe the saved post-update snapshot's automated `PM` test as a human approval.
 
 ## Fallback if the app stalls for more than 3 seconds
 
-Switch to the deck tab and press `B`. Backup slides **B1–B5** follow the demo beats in
-order: overview, trace, score, decision, update. Keep talking from the same script without
-apologising. The local capture pack ([`bmw-demo-captures.md`](bmw-demo-captures.md)) is the
-second fallback. No recorded live run exists yet.
+The deck has no backup slides. Keep talking from the same script without apologising and use the
+local capture pack ([`bmw-demo-captures.md`](bmw-demo-captures.md)). No recorded live run exists yet.
 
 ## Q&A
 
 Answer in under 30 seconds: the number first, the caveat second. Use the
-[Q&A card](bmw-demo-qa.md). Two backup slides support common questions:
-
-- **B6 Built today, pilot next:** for “what didn't you build?”, Codebeamer, SSO or scale.
-- **B7 The agent-ready runtime:** for “where are the agents?”. It belongs to the integrated platform build, not the frozen demo, and LLM orchestration is the next phase.
+[Q&A card](bmw-demo-qa.md).
 
 ## Stage setup
 
@@ -82,5 +76,5 @@ Answer in under 30 seconds: the number first, the caveat second. Use the
 ## Deck keys
 
 `→`/Space next (on a trailer slide, the first press plays it; moving onto V2 plays it at once) · `←` back ·
-`B` first backup slide · `C` close slide · `T` rehearsal stopwatch · `E` edit text ·
+`C` close slide · `T` rehearsal stopwatch · `E` edit text ·
 `R` replay slide animation. The toolbar appears on hover only.

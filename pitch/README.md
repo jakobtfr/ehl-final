@@ -1,19 +1,16 @@
 # G60 / US pitch slides
 
-**Present with [`output/pitch-final.html`](output/pitch-final.html)** (static backup: [`output/pdf/pitch-final.pdf`](output/pdf/pitch-final.pdf)). The order is V1 trailer → two pipeline slides → live demo → V2 trailer → agents → close. The [final run of show](../notes/pitch-final-run-of-show.md) has the script, driver clicks and stage setup.
+**Present with [`output/pitch-final.html`](output/pitch-final.html)** (static backup: [`output/pdf/pitch-final.pdf`](output/pdf/pitch-final.pdf)). The order is V1 trailer → two pipeline slides → live demo → V2 trailer → close: two videos and three slides. The [final run of show](../notes/pitch-final-run-of-show.md) has the script, driver clicks and stage setup.
 
 | Slide | Purpose |
 | --- | --- |
 | V1 | 15-second trailer, the product management pipeline. Plays `output/pitch-film-v1-short.mp4` (ignored by Git) if it sits next to the HTML; otherwise shows a title card. Press → to play; the deck moves on when it ends. |
 | Pipeline 1 | Collect → link → propose → score → decide; new evidence reopens only the affected proposals. |
 | Pipeline 2 | The three questions every requirement has to survive. Switch to the app and demo after this slide. |
-| V2 | 15-second trailer, the multi-agent system (`output/pitch-film-v2-short.mp4`). Back in the deck after the demo, one press of → opens and plays it. |
-| Agents | Plan, delegate, log, refuse: agents do the legwork, only a PM decides. |
+| V2 | 15-second trailer, the multi-agent system (`output/pitch-film-v2-short.mp4`). Back in the deck after the demo, one press of → opens and plays it; the deck moves to the close when it ends. |
 | Close | Agents prepare, PMs decide: automated, surfaced and PM-only work. |
-| B1–B5 | Fallback: the demo beats in order (overview, trace, score, decision, update) if the app stalls. Press `B`. |
-| B6–B7 | Q&A: built today versus pilot next; the agent-ready runtime. |
 
-Keys: →/Space next, ← back, `B` backup, `C` close, `T` rehearsal stopwatch, `E` edit, `R` replay. Modifier shortcuts such as `⌘⌥→` pass through to the browser for tab switching. The URL hash keeps the current slide across reloads. Rebuild with `node pitch/build-final.mjs`.
+Keys: →/Space next, ← back, `C` close, `T` rehearsal stopwatch, `E` edit, `R` replay. Modifier shortcuts such as `⌘⌥→` pass through to the browser for tab switching. The URL hash keeps the current slide across reloads. Rebuild with `node pitch/build-final.mjs`.
 
 The final deck is deliberately minimal: a roundel, a headline and a few large cards per slide, with no footers, IDs or fine print. Caveats, source rows and IDs are spoken (see the run of show and the [claim ledger](../notes/bmw-demo-claim-ledger.md)). The car render is credited here rather than on the slides; add the CC BY credit back to the slides if the deck is distributed.
 

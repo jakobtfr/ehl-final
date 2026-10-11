@@ -2,8 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Final stage deck: V1 trailer, two pipeline slides (the live demo follows), V2 trailer, agents,
-// close, then backup slides for demo fallback and Q&A.
+// Final stage deck: V1 trailer, two pipeline slides (the live demo follows), V2 trailer, close.
 // Slides carry only headlines, large figures and short card text; the presenter speaks the
 // detail and caveats (notes/pitch-final-run-of-show.md). Figures follow the claim ledger.
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -26,12 +25,6 @@ const logoGrey = (await fs.readFile(path.join(here, 'assets/bmw-grey.svg'), 'utf
 const carUri = `data:image/png;base64,${await b64(path.join(here, 'assets/g60-car-faded.png'))}`;
 
 const mark = dark => `<div class="mark">${dark ? logoWhite : logoGrey}</div>`;
-const card = (value, text, d, extra = '') => `<article class="card ${extra}" data-enter style="--d:${d}s"><strong data-edit>${value}</strong><p>${text}</p></article>`;
-const backup = (n, title, cards) => `
-<section class="slide backup" data-backup data-label="B${n}" aria-label="Backup ${n}: ${title}">${mark(false)}
-<h2 data-enter>${title}</h2>
-<div class="cards">${cards}</div></section>`;
-
 // A film slot plays its MP4 when the file sits next to this HTML; otherwise its title card shows.
 const filmSlide = (label, src, kicker, title, active = '') => `<section class="slide dark film-slide${active}" data-label="${label}" aria-label="${label} trailer">
 <div class="film-fallback"><div class="film-car car-art" aria-hidden="true"></div><p class="film-kicker">${kicker}</p><h1 class="film-title">${title}</h1></div>
@@ -63,15 +56,6 @@ ${step(5, 'Decide', 'The PM approves an exact version', .44)}
 
   filmSlide('V2', 'pitch-film-v2-short.mp4', 'V2 · The multi-agent system', 'Agents<br>prepare.'),
 
-  `<section class="slide agents" data-label="Agents" aria-label="The multi-agent system">${mark(false)}
-<h2 data-enter>Agents do the legwork. Only a PM decides.</h2>
-<div class="cards">${[
-    card('Plan', 'An orchestrator, one step at a time', .12),
-    card('Delegate', 'Scoped specialist agents', .2),
-    card('Log', 'Every step a recorded task', .28),
-    card('Refuse', 'No agent can approve', .36, 'gate'),
-  ].join('')}</div></section>`,
-
   `<section class="slide dark close" data-close data-label="Close" aria-label="Close">${mark(true)}
 <div class="blue-rule"></div>
 <h1 data-enter>Agents prepare.<br>Product managers<br>decide.</h1>
@@ -81,40 +65,6 @@ ${step(5, 'Decide', 'The PM approves an exact version', .44)}
 <div class="lane human" data-enter style="--d:.38s"><strong data-edit>PM only</strong><p>Every decision, fully audited</p></div>
 </div></section>`,
 
-  backup(1, 'Samples, not market share', [
-    card('4,365', 'Feedback rows', .12),
-    card('73%', 'From one source', .2),
-    card('11', 'Proposals', .28),
-  ].join('')),
-  backup(2, 'One click to the source', [
-    card('264', 'Linked source rows', .12),
-    card('12', 'Checked by hand', .2),
-    card('1 click', "To the customer's words", .28),
-  ].join('')),
-  backup(3, 'Priority and proof stay separate', [
-    card('71.26', 'Priority score', .12),
-    card('C', 'Evidence grade', .2),
-    card('80%', 'Target: PM assumption', .28, 'assume'),
-  ].join('')),
-  backup(4, 'Only a PM can decide', [
-    card('Refused', 'AI approvals', .12),
-    card('Versioned', 'Every PM decision', .2),
-    card('Audited', 'Every step', .28),
-  ].join('')),
-  backup(5, 'Only affected decisions come back', [
-    card('+1', 'Simulated record', .12),
-    card('1 of 11', 'Reopened', .2),
-    card('+0.07', 'Priority change', .28),
-  ].join('')),
-  backup(6, 'Built today, pilot next', `
-<article class="list" data-enter style="--d:.12s"><strong>Built today</strong><ul><li>Source-linked proposals</li><li>Deterministic scoring</li><li>Human-only decisions</li><li>Delta-only review</li></ul></article>
-<article class="list pilot" data-enter style="--d:.22s"><strong>Pilot next</strong><ul><li>BMW SSO</li><li>Codebeamer export</li><li>Agents on BMW models</li><li>More markets</li></ul></article>`),
-  backup(7, 'Ready for agents', [
-    card('Registry', 'Scoped roles', .1),
-    card('Tasks', 'One market each', .18),
-    card('Schedule', 'Recurring checks', .26),
-    card('Runs', 'Every one logged', .34),
-  ].join('')),
 ];
 
 const html = `<!doctype html>
@@ -148,22 +98,11 @@ h1,h2,p,ol,ul{margin:0}h1,h2{font-weight:300;letter-spacing:-.022em}
 .steps li:not(:last-child)::after{content:'';position:absolute;z-index:1;right:-12px;top:44px;width:12px;height:2px;background:var(--blue)}
 .steps b{display:block;font-size:20px;font-weight:400;color:var(--blue)}.steps li:last-child b{color:#8fb4e8}
 .steps strong{display:block;margin-top:14px;font-size:32px;font-weight:500;letter-spacing:-.01em}.steps p{margin-top:10px;font-size:20px;line-height:1.3;color:var(--muted)}.steps li:last-child p{color:#b9c9dd}
-.loop{position:absolute;left:80px;top:568px;width:1120px;display:flex;align-items:center;gap:20px;font-size:24px}.loop span{color:var(--muted)}.loop i{flex:0 0 64px;height:2px;background:var(--blue);position:relative}.loop i::after{content:'';position:absolute;right:-1px;top:-5px;border:6px solid transparent;border-left:9px solid var(--blue);border-right:0}.loop strong{font-weight:500}
-/* Agents */
-.agents h2{position:absolute;left:80px;top:150px;width:1120px;font-size:56px;line-height:1.08}
-.card.gate{background:var(--navy);color:#fff}.card.gate p{color:#b9c9dd}
 /* Close */
 .close .blue-rule{position:absolute;left:80px;top:196px;width:7px;height:300px;background:var(--blue);transform-origin:top;transform:scaleY(0)}.active .blue-rule{animation:ruleGrow .7s .1s cubic-bezier(.2,.8,.2,1) forwards}@keyframes ruleGrow{to{transform:scaleY(1)}}
 .close h1{position:absolute;left:112px;top:206px;width:540px;font-size:68px;line-height:1.06}
 .lanes{position:absolute;left:700px;top:196px;width:500px}.lane{padding:22px 0 24px;border-top:1px solid #2c4060}.lane:last-child{border-bottom:1px solid #2c4060}.lane strong{display:block;font-size:30px;font-weight:500}.lane p{font-size:24px;color:#b9c9dd;margin-top:4px}
 .lane.human{background:linear-gradient(90deg,#1c69d433,transparent);padding-left:20px;margin-left:-20px;border-left:3px solid var(--blue)}.lane.human p{color:#fff}
-/* Backup */
-.backup h2{position:absolute;left:80px;top:150px;width:1120px;font-size:56px;line-height:1.08}
-.cards{position:absolute;left:80px;top:300px;width:1120px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:20px}
-.card{background:var(--tile);padding:34px 32px;min-height:250px;display:flex;flex-direction:column;justify-content:space-between}.card strong{font-size:72px;font-weight:300;letter-spacing:-.02em;line-height:1}.card p{font-size:26px;color:var(--muted)}
-.cards:has(.card:nth-child(4)) .card strong{font-size:52px}
-.card.assume{box-shadow:inset 0 4px 0 var(--amber)}
-.list{background:var(--tile);padding:34px 36px}.list strong{font-size:32px;font-weight:500;color:var(--blue)}.list.pilot strong{color:var(--amber)}.list ul{list-style:none;padding:0;margin-top:20px}.list li{font-size:26px;padding:9px 0;border-top:1px solid #d4dae3}
 /* Controls */
 .progress{position:absolute;z-index:10;left:0;bottom:0;height:4px;background:var(--blue);transition:width .45s ease}
 .toolbar .timer{font-size:13px;padding:0 6px;color:#8fb4e8}

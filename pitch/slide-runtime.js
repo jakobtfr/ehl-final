@@ -36,6 +36,7 @@ function show(index) {
 }
 
 // On a film slide, the first "next" starts the film; the deck advances when it ends.
+// Advancing onto a film slide starts it from the beginning with the same key press.
 function next() {
   const video = film(slides[current]);
   if (video && video.readyState > 0 && video.paused && !video.ended) {
@@ -43,6 +44,11 @@ function next() {
     return;
   }
   show(current + 1);
+  const arriving = film(slides[current]);
+  if (arriving && arriving.readyState > 0) {
+    arriving.currentTime = 0;
+    arriving.play();
+  }
 }
 
 function toggleTimer(force) {

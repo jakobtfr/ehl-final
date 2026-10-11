@@ -1,4 +1,4 @@
-# Final pitch run of show: 30-second film, 2-minute demo, 3:00 hard stop
+# Final pitch run of show: V1 trailer, pipeline, demo, V2 trailer, 3:00 hard stop
 
 Status: **stage script**, 11 October 2026. This replaces the timing in the
 [pitch story](pitch-story-and-video.md) and the [pitch plan](pitch-plan.md). The
@@ -26,21 +26,25 @@ them. The product answers them live.
 
 ## Timing
 
-The slides get 25 seconds and the demo gets 1:55. That leaves 10 seconds of buffer
-inside 3:00. These are rehearsal targets; no presenter has timed them yet.
+Two 15-second trailers bracket the demo: V1 introduces the product management pipeline, V2 the
+multi-agent system. These are rehearsal targets; no presenter has timed them yet.
 
-| Clock | Screen | Driver | Presenter says (about 110 words per minute) |
+| Clock | Screen | Driver | Presenter says |
 | --- | --- | --- | --- |
-| 0:00–0:30 | **Film** (deck slide `Film`) | Press → once to play. The deck moves to the hook when the film ends. | Nothing. |
-| 0:30–0:40 | **Hook** slide | — | “For two years, every requirement has to survive three questions. Where did it come from? How sure are we? What changed since we decided? Here's the G60 i5 in the US, live.” |
-| 0:40–0:50 | App: Overview, G60 / US | Switch to the app tab. | “4,365 imported feedback rows. And the first thing it tells you: about 73% of feedback IDs come from one source. So these are samples, not market share.” |
-| 0:50–1:15 | Requirements → search `charging` → `REQ-G60-US-001` → Evidence Trace → row 432 | Click while the presenter talks. | “Here's a proposal: charging. Where did it come from? One click: workbook, sheet, row 432, the customer's own words. 264 linked rows. We checked 12 by hand, and the one false positive stays visible.” |
-| 1:15–1:35 | Score tab, then the acceptance target | — | “How sure are we? Priority 71.26 from a versioned rubric: same inputs, same score. Evidence grade C sits beside it, never inside it. And the 80% target is labelled PM assumption, because no data proves it.” |
-| 1:35–1:55 | Decision footer | The **presenter** selects their own reviewer, types a rationale and approves. Then the driver runs `scripts/run_bmw_demo_update.sh`. | “So the PM decides. I approve this exact version and score. An AI actor can't do this; the API refuses it. And it's in the audit trail.” |
-| 1:55–2:35 | Refresh → Needs review → Open review → **Versions** | Open the review as soon as the script finishes. | “Two years of new feedback. This record is simulated. Only charging comes back, one of eleven. One new linked row moves priority from 71.26 to 71.33. Wording and target are unchanged, and my approved version stays frozen beside the new one. The PM reviews the change, not the whole list.” |
-| 2:35–2:50 | **Close** slide | Switch to the deck tab, press →. | “The machine prepares and flags what's uncertain; the PM decides. The same pipeline works for any *Baureihe* and market, and the platform can run these operations as scoped agent tasks over MCP. Agents prepare. Product managers decide.” |
+| 0:00–0:15 | **V1 trailer** (deck slide `V1`) | Press → once to play. The deck moves to Pipeline 1 when it ends. | Nothing. |
+| 0:15–0:30 | **Pipeline 1** | Press → when the presenter finishes. | The pipeline: collect feedback and public sources, link every row word for word, propose requirements, score priority beside evidence grade, and the PM decides; new evidence reopens only affected proposals. |
+| 0:30–0:40 | **Pipeline 2** (three questions) | Switch to the app tab at the end. | “Every requirement has to survive three questions. Where did it come from? How sure are we? What changed since we decided? Here's the G60 i5 in the US, live.” |
+| 0:40–2:15 | **App demo**: overview → `REQ-G60-US-001` → Evidence Trace → row 432 → Score → decision → simulated update → Versions | As in the beats below. | Trace, score and grade, the presenter's own decision, then the one reopened proposal (+0.07). |
+| 2:15–2:30 | **V2 trailer** | Switch to the deck tab, press → once: it opens V2 and plays it. The deck moves to Agents when it ends. | Nothing. |
+| 2:30–2:40 | **Agents** | Press → when done. | “An orchestrator plans one step at a time and delegates to scoped specialist agents. Every step is a recorded task, and no agent can approve.” |
+| 2:40–2:50 | **Close** | — | “Agents prepare. Product managers decide.” |
 
-Pause briefly after row 432, after “grade C” and before the final line.
+Demo beats and their lines, compressed from the earlier script: overview (4,365 rows, about 73% of
+feedback IDs from one source, so samples, not market share); charging proposal → Evidence Trace → row 432
+(264 linked rows, 12 checked by hand); Score (71.26 from a versioned rubric, grade C beside it, 80% target
+labelled PM assumption); the **presenter** approves the exact version, then the driver runs
+`scripts/run_bmw_demo_update.sh`; Needs review → Open review → **Versions** (simulated record, 1 of 11
+reopened, 71.26 → 71.33, approved version frozen).
 
 ## Cut rules
 
@@ -69,14 +73,14 @@ Answer in under 30 seconds: the number first, the caveat second. Use the
 - One Chrome window, presentation mode (`⌘⌃F`). Tab 1 is the deck, tab 2 is
   <http://127.0.0.1:13203/g60/us> after `scripts/reset_bmw_demo.sh predecision`.
   Switch with `⌘⌥→` and `⌘⌥←`. The deck's own `F` fullscreen ends when you switch tabs, so do not use it.
-- Put the exported film at `pitch/output/pitch-film.mp4`, next to the deck. Without it, the
-  film slot shows a title card. Play it once before the session so it is buffered, then reload
-  the deck (it reopens on the slide in the URL hash, e.g. `#1`).
+- Put `pitch-film-v1-short.mp4` and `pitch-film-v2-short.mp4` in `pitch/output/`, next to the deck.
+  Without them, each trailer slot shows a title card. Play both once before the session so they are
+  buffered, then reload the deck (it reopens on the slide in the URL hash, e.g. `#1`).
 - App browser zoom set so table text reads at the back of the room; check it on the venue display.
 - Notifications off, terminal open in the `bmw-demo-core` worktree with the update command typed.
 
 ## Deck keys
 
-`→`/Space next (on the film slide, the first press plays the film) · `←` back ·
+`→`/Space next (on a trailer slide, the first press plays it; moving onto V2 plays it at once) · `←` back ·
 `B` first backup slide · `C` close slide · `T` rehearsal stopwatch · `E` edit text ·
 `R` replay slide animation. The toolbar appears on hover only.

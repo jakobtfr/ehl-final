@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Final stage deck: film slot, hook, close, then backup slides for demo fallback and Q&A.
+// Final stage deck: V1 trailer, two pipeline slides (the live demo follows), V2 trailer, agents,
+// close, then backup slides for demo fallback and Q&A.
 // Slides carry only headlines, large figures and short card text; the presenter speaks the
 // detail and caveats (notes/pitch-final-run-of-show.md). Figures follow the claim ledger.
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -31,13 +32,27 @@ const backup = (n, title, cards) => `
 <h2 data-enter>${title}</h2>
 <div class="cards">${cards}</div></section>`;
 
-const slides = [
-  // Film slot. Put pitch-film.mp4 next to this HTML; without it, the title card shows instead.
-  `<section class="slide dark film-slide active" data-label="Film" aria-label="Opening film">
-<div class="film-fallback"><div class="film-car car-art" aria-hidden="true"></div><h1 class="film-title">Agents prepare.<br>Product managers decide.</h1></div>
-<video class="film" src="pitch-film.mp4" preload="auto" playsinline></video></section>`,
+// A film slot plays its MP4 when the file sits next to this HTML; otherwise its title card shows.
+const filmSlide = (label, src, kicker, title, active = '') => `<section class="slide dark film-slide${active}" data-label="${label}" aria-label="${label} trailer">
+<div class="film-fallback"><div class="film-car car-art" aria-hidden="true"></div><p class="film-kicker">${kicker}</p><h1 class="film-title">${title}</h1></div>
+<video class="film" src="${src}" preload="auto" playsinline></video></section>`;
+const step = (n, title, text, d) => `<li data-enter style="--d:${d}s"><b>${n}</b><strong data-edit>${title}</strong><p>${text}</p></li>`;
 
-  `<section class="slide hook" data-label="Hook" aria-label="Three questions">${mark(false)}
+const slides = [
+  filmSlide('V1', 'pitch-film-v1-short.mp4', 'V1 · The product management pipeline', 'Evidence to<br>decision.', ' active'),
+
+  `<section class="slide pipeline" data-label="Pipeline 1" aria-label="The pipeline">${mark(false)}
+<h2 data-enter>From customer voice to a requirement a PM can defend.</h2>
+<ol class="steps">
+${step(1, 'Collect', 'BMW feedback, NHTSA, owner forums, web', .12)}
+${step(2, 'Link', 'Every row kept word for word', .2)}
+${step(3, 'Propose', 'Requirements from recurring needs', .28)}
+${step(4, 'Score', 'Priority beside evidence grade', .36)}
+${step(5, 'Decide', 'The PM approves an exact version', .44)}
+</ol>
+<div class="loop" data-enter style="--d:.56s"><span>New evidence</span><i></i><strong data-edit>Only affected proposals reopen</strong></div></section>`,
+
+  `<section class="slide hook" data-label="Pipeline 2" aria-label="Three questions">${mark(false)}
 <h2 data-enter>Every requirement has to survive three questions.</h2>
 <ol class="questions">
 <li data-enter style="--d:.16s"><b>1</b><strong data-edit>Where did it come from?</strong></li>
@@ -45,6 +60,17 @@ const slides = [
 <li data-enter style="--d:.40s"><b>3</b><strong data-edit>What changed since we decided?</strong></li>
 </ol>
 <div class="hook-panel"></div><div class="hook-car car-art" data-enter style="--d:.2s" role="img" aria-label="BMW i5 M60"></div></section>`,
+
+  filmSlide('V2', 'pitch-film-v2-short.mp4', 'V2 · The multi-agent system', 'Agents<br>prepare.'),
+
+  `<section class="slide agents" data-label="Agents" aria-label="The multi-agent system">${mark(false)}
+<h2 data-enter>Agents do the legwork. Only a PM decides.</h2>
+<div class="cards">${[
+    card('Plan', 'An orchestrator, one step at a time', .12),
+    card('Delegate', 'Scoped specialist agents', .2),
+    card('Log', 'Every step a recorded task', .28),
+    card('Refuse', 'No agent can approve', .36, 'gate'),
+  ].join('')}</div></section>`,
 
   `<section class="slide dark close" data-close data-label="Close" aria-label="Close">${mark(true)}
 <div class="blue-rule"></div>
@@ -82,7 +108,7 @@ const slides = [
   ].join('')),
   backup(6, 'Built today, pilot next', `
 <article class="list" data-enter style="--d:.12s"><strong>Built today</strong><ul><li>Source-linked proposals</li><li>Deterministic scoring</li><li>Human-only decisions</li><li>Delta-only review</li></ul></article>
-<article class="list pilot" data-enter style="--d:.22s"><strong>Pilot next</strong><ul><li>BMW SSO</li><li>Codebeamer export</li><li>Live LLM agents</li><li>More markets</li></ul></article>`),
+<article class="list pilot" data-enter style="--d:.22s"><strong>Pilot next</strong><ul><li>BMW SSO</li><li>Codebeamer export</li><li>Agents on BMW models</li><li>More markets</li></ul></article>`),
   backup(7, 'Ready for agents', [
     card('Registry', 'Scoped roles', .1),
     card('Tasks', 'One market each', .18),
@@ -108,12 +134,24 @@ h1,h2,p,ol,ul{margin:0}h1,h2{font-weight:300;letter-spacing:-.022em}
 /* Film */
 .film-slide{background:#000}.film{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0}.has-film .film{opacity:1}
 .film-fallback{position:absolute;inset:0;background:radial-gradient(circle at 70% 55%,#173a6b 0,#0b1422 55%)}.film-car{position:absolute;right:20px;top:170px;width:700px}
+.film-kicker{position:absolute;left:80px;top:212px;font-size:18px;letter-spacing:.18em;text-transform:uppercase;color:#8fb4e8}
 .film-title{position:absolute;left:80px;top:250px;width:620px;font-size:68px;line-height:1.06}.has-film .film-fallback{display:none}
 /* Hook */
 .hook h2{position:absolute;left:80px;top:170px;width:640px;font-size:58px;line-height:1.08}
 .questions{position:absolute;left:80px;top:380px;width:640px;padding:0;list-style:none}.questions li{display:grid;grid-template-columns:56px 1fr;align-items:baseline;padding:20px 0;border-top:1px solid #d4dae3}.questions li:last-child{border-bottom:1px solid #d4dae3}
 .questions b{font-size:30px;font-weight:300;color:var(--blue)}.questions strong{font-size:32px;font-weight:500;letter-spacing:-.01em}
 .hook-panel{position:absolute;left:792px;top:0;right:0;bottom:0;background:radial-gradient(circle at 50% 52%,#1d3352 0,#0b1422 70%)}.hook-car{position:absolute;left:806px;top:262px;width:460px}
+/* Pipeline */
+.pipeline h2{position:absolute;left:80px;top:150px;width:900px;font-size:56px;line-height:1.08}
+.steps{position:absolute;left:80px;top:340px;width:1120px;padding:0;list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.steps li{position:relative;background:var(--tile);padding:26px 22px 28px;min-height:196px}.steps li:last-child{background:var(--navy);color:#fff}
+.steps li:not(:last-child)::after{content:'';position:absolute;z-index:1;right:-12px;top:44px;width:12px;height:2px;background:var(--blue)}
+.steps b{display:block;font-size:20px;font-weight:400;color:var(--blue)}.steps li:last-child b{color:#8fb4e8}
+.steps strong{display:block;margin-top:14px;font-size:32px;font-weight:500;letter-spacing:-.01em}.steps p{margin-top:10px;font-size:20px;line-height:1.3;color:var(--muted)}.steps li:last-child p{color:#b9c9dd}
+.loop{position:absolute;left:80px;top:568px;width:1120px;display:flex;align-items:center;gap:20px;font-size:24px}.loop span{color:var(--muted)}.loop i{flex:0 0 64px;height:2px;background:var(--blue);position:relative}.loop i::after{content:'';position:absolute;right:-1px;top:-5px;border:6px solid transparent;border-left:9px solid var(--blue);border-right:0}.loop strong{font-weight:500}
+/* Agents */
+.agents h2{position:absolute;left:80px;top:150px;width:1120px;font-size:56px;line-height:1.08}
+.card.gate{background:var(--navy);color:#fff}.card.gate p{color:#b9c9dd}
 /* Close */
 .close .blue-rule{position:absolute;left:80px;top:196px;width:7px;height:300px;background:var(--blue);transform-origin:top;transform:scaleY(0)}.active .blue-rule{animation:ruleGrow .7s .1s cubic-bezier(.2,.8,.2,1) forwards}@keyframes ruleGrow{to{transform:scaleY(1)}}
 .close h1{position:absolute;left:112px;top:206px;width:540px;font-size:68px;line-height:1.06}
@@ -131,10 +169,18 @@ h1,h2,p,ol,ul{margin:0}h1,h2{font-weight:300;letter-spacing:-.022em}
 .toolbar .timer{font-size:13px;padding:0 6px;color:#8fb4e8}
 @media(prefers-reduced-motion:reduce){.slide.active,.active [data-enter],.active .blue-rule{animation:none!important;opacity:1!important;transform:none!important}.progress{transition:none}}
 ${editCss}
-@media print{.film{display:none!important}.film-fallback{display:block!important}}
+@media print{
+  @page{size:1280px 720px;margin:0}
+  html,body{width:1280px;height:auto;overflow:visible;background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .deck{position:static;left:auto;top:auto;width:1280px;height:auto;transform:none;overflow:visible;box-shadow:none}
+  .slide,.slide.active{position:relative;display:block!important;width:1280px;height:720px;animation:none!important;break-after:page;page-break-after:always}
+  .slide:last-of-type{break-after:auto;page-break-after:auto}
+  .slide [data-enter],.slide.active [data-enter],.slide .blue-rule{opacity:1!important;transform:none!important;animation:none!important}
+  .progress,.toolbar,.film{display:none!important}.film-fallback{display:block!important}
+}
 </style></head><body><main class="deck" aria-label="Final pitch deck">
 ${slides.join('\n')}
-<div class="progress" id="progress"></div><div class="toolbar" aria-label="Slide controls"><span class="timer" id="timer" hidden>0:00</span><button id="prev" aria-label="Previous slide">‹</button><span class="page-count" id="page-count">Film</span><button id="next" aria-label="Next slide">›</button><button id="edit">Edit text</button><button id="save">Save HTML</button><button id="print">Print PDF</button></div>
+<div class="progress" id="progress"></div><div class="toolbar" aria-label="Slide controls"><span class="timer" id="timer" hidden>0:00</span><button id="prev" aria-label="Previous slide">‹</button><span class="page-count" id="page-count">V1</span><button id="next" aria-label="Next slide">›</button><button id="edit">Edit text</button><button id="save">Save HTML</button><button id="print">Print PDF</button></div>
 </main><script>${runtime}</script></body></html>`;
 await fs.writeFile(out, html);
 console.log(out);

@@ -8,6 +8,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { VehicleAsset } from "@/lib/vehicle-models";
 import { zoneNames } from "@/lib/vehicle-models";
 import { disposeVehicle, fittedCameraPosition, studioEnvironment, studioMaterial } from "@/lib/vehicle-rendering";
+import { applyBrandMarks, disposeBrandMarks } from "@/lib/vehicle-badges";
 
 type CameraView = { mode: "overview" | "focus"; revision: number };
 type CameraRig = { show: (zone: string, mode: CameraView["mode"], animate?: boolean) => void };
@@ -45,6 +46,7 @@ export function VehicleViewport({ asset, selectedZone, paint, responses, pinColo
     let disposed = false;
     let frame = 0;
     let vehicle: THREE.Object3D | null = null;
+    let marks: THREE.Group | null = null;
     let renderer: THREE.WebGLRenderer;
     let modelBounds: THREE.Box3 | null = null;
     let viewMode: CameraView["mode"] = "overview";
@@ -260,6 +262,12 @@ export function VehicleViewport({ asset, selectedZone, paint, responses, pinColo
       renderer.shadowMap.needsUpdate = true;
       show(selectedRef.current, viewRef.current?.mode || "overview", false);
       setState("ready");
+      void applyBrandMarks(vehicle, asset.trim, renderer).then((group) => {
+        if (disposed) { disposeBrandMarks(group); return; }
+        marks = group;
+        renderer.shadowMap.needsUpdate = true;
+        scheduleRender();
+      }).catch(() => { /* Brand marks are decorative; the model stays usable without them. */ });
     }).catch(() => {
       if (disposed) return;
       setState("fallback");
@@ -276,6 +284,7 @@ export function VehicleViewport({ asset, selectedZone, paint, responses, pinColo
       rigRef.current = null;
       renderRef.current = null;
       paintRef.current = [];
+      disposeBrandMarks(marks);
       disposeVehicle(scene, replacedMaterials);
       environment.dispose();
       key.shadow.dispose();

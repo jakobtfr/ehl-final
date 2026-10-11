@@ -16,6 +16,7 @@ import {
   type ZoneRollup,
 } from "@/lib/vehicle-models";
 import { useWorkspace } from "./context";
+import { VehicleConfigurator } from "./vehicle-configurator";
 import { Heading, ScoreLabel, Status } from "./shared";
 import { PmSelect } from "./pm-select";
 
@@ -501,6 +502,8 @@ export function VehicleStudio() {
               </div>
             </section>
           </div>
+
+          <VehicleConfigurator key={manifest.id} data={asset.configurator} />
 
           <section
             className="studio-requirements"

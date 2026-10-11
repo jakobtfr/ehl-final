@@ -108,6 +108,29 @@
 @media (max-width: 900px) { .studio-grid { grid-template-columns: 1fr; height: auto; } .studio-viewer { height: 530px; } .studio-zones { border-left: 0; border-top: 1px solid var(--border); } .studio-zones .studio-panel-heading { padding-block: 20px 12px; } .studio-zone-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); } .studio-zone-column-label { display: none; } .studio-layer { max-width: 240px; } .studio-list-footnote { padding-block: 14px; } .studio-detail-grid { grid-template-columns: 1fr; } .vehicle-stage { min-height: 0; } }
 @media (max-width: 560px) { .studio-toolbar { align-items: stretch; } .studio-model-switch { width: 100%; } .studio-model-switch a { flex: 1; text-align: center; padding-inline: 12px; } .studio-scope-label { font-size: 11px; } .studio-grid { border-radius: 8px; } .studio-viewer-top { padding: 22px 20px 0; } .studio-viewer-top h2 { font-size: 34px; } .studio-model-detail { font-size: 11px; max-width: 45%; } .studio-viewer { height: 440px; } .vehicle-stage { min-height: 0; } .studio-viewer-bottom { padding: 12px 15px; } .studio-view-controls { gap: 5px; } .studio-view-controls button { font-size: 11px; padding: 6px 8px; } .studio-swatches { gap: 8px; } .studio-swatches button { width: 25px; height: 25px; } .studio-zone-list { grid-template-columns: 1fr 1fr; } .studio-zone-row { min-height: 42px; } .studio-zone-row strong { font-size: 11px; } .studio-requirements-heading { align-items: flex-start; flex-direction: column; } .studio-requirement-list article { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; } .studio-requirement-list article > a { grid-column: 1 / -1; } .studio-rollup { gap: 8px; padding-inline: 20px; } .studio-rollup strong { font-size: 24px; } .studio-rollup span { font-size: 9px; } .studio-panel-heading, .studio-requirements { padding: 22px 20px; } .studio-signals { margin-inline: 20px; } .studio-inspector-content { padding-inline: 20px; } .studio-note-footer { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .vehicle-studio *, .vehicle-studio *::before { transition: none !important; } }
+/* Configurator reference: official BMW USA specs and walkaround, sized to the studio's type scale. */
+.studio-configurator { min-width: 0; padding: 25px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+.studio-configurator .studio-requirements-heading .mono { display: block; margin-bottom: 6px; color: var(--primary); font-size: 11px; letter-spacing: .08em; }
+.studio-configurator-models { margin-top: 18px; width: fit-content; border-radius: 6px; background: var(--muted); }
+.studio-configurator-models button { padding: 9px 15px; border-radius: 5px; font-size: 12px; color: var(--muted-foreground); }
+.studio-configurator-models button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+.studio-configurator-note { display: flex; align-items: flex-start; gap: 9px; margin-top: 16px; font-size: 12px; line-height: 1.6; color: var(--muted-foreground); }
+.studio-configurator-note svg { flex: none; margin-top: 3px; }
+.studio-configurator-body { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(240px, 1fr); gap: 26px; margin-top: 20px; align-items: start; }
+.studio-spin { overflow: hidden; margin: 0; border-radius: 8px; background: linear-gradient(180deg, #f6f8fa, #e8edf1); cursor: grab; touch-action: pan-y; user-select: none; }
+.studio-spin:active { cursor: grabbing; }
+.studio-spin img { display: block; width: 100%; aspect-ratio: 2 / 1; object-fit: cover; transform: scale(1.12); pointer-events: none; }
+.studio-spin-controls { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 0 12px 6px; }
+.studio-spin-controls button { min-height: 44px; font-size: 20px; color: var(--muted-foreground); }
+.studio-spin-controls input { width: 100%; accent-color: var(--primary); }
+.studio-spin figcaption { padding: 0 16px 14px; font-size: 11px; color: var(--muted-foreground); }
+.studio-specs { display: grid; margin: 0; }
+.studio-specs div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); }
+.studio-specs dt { font-size: 12px; color: var(--muted-foreground); }
+.studio-specs dd { margin: 0; font-size: 15px; font-variant-numeric: tabular-nums; }
+.studio-spec-footnote { margin-top: 14px; font-size: 11px; line-height: 1.6; color: var(--muted-foreground); }
+@media (max-width: 900px) { .studio-configurator-body { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .studio-configurator { padding: 22px 20px; } }
 
 :root {
   --attention: #996316;

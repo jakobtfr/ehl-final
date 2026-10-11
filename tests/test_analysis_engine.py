@@ -2,10 +2,12 @@
 import copy
 import json
 import traceback
+from contextlib import closing
 from urllib.error import HTTPError
 
 import pytest
 
+from database.store import connect
 from server import analysis_engine as engine
 
 
@@ -188,7 +190,7 @@ def test_invalid_source_target_gets_one_correction_with_identical_bounded_eviden
     assert result["proposals"] == expected["proposals"]
     assert result["analyzed_evidence_ids"] == ["e1", "e2"]
     assert result["provider"] == "openai"
-    assert result["prompt_version"] == "bmw-customer-requirements-v2"
+    assert result["prompt_version"] == "bmw-customer-requirements-v3"
     assert any("one correction request" in warning for warning in result["warnings"])
     assert any("1 bounded batches (2 requests)" in warning for warning in result["warnings"])
 
@@ -402,6 +404,65 @@ def test_provider_cannot_drop_explicitly_liked_customer_attributes(ai, monkeypat
     monkeypatch.setattr(engine, "_request_openai", lambda *_: {"findings": [], "proposals": [], "warnings": []})
     with pytest.raises(engine.AnalysisError, match="retained as strengths"):
         analyze([record(kind="Likes")], provider="openai")
+
+
+@pytest.mark.parametrize("adverse_kind", ["problem", "need"])
+def test_provider_cannot_recast_liked_evidence_as_a_defect_or_need(ai, monkeypatch, adverse_kind):
+    evidence = [record(text="I love how the car drives", kind="Likes", topic="Driving experience")]
+    output = ai_result(evidence)
+    complaint = copy.deepcopy(output["findings"][0])
+    complaint.update(kind=adverse_kind, summary="Customers dislike the driving experience")
+    output["findings"].append(complaint)
+    output["proposals"][0]["finding_indexes"].append(1)
+    monkeypatch.setattr(engine, "_request_openai", lambda *_: output)
+
+    with pytest.raises(engine.AnalysisError, match="Positive customer evidence cannot support an adverse finding"):
+        analyze(evidence, provider="openai")
+
+
+@pytest.mark.parametrize("adverse_kind", ["problem", "need"])
+def test_recast_positive_evidence_cannot_persist_a_pipeline_run(client, ai, monkeypatch, adverse_kind):
+    imported = client.post("/imports/records", json={"title": "Simulated driving praise", "reference": "simulated-preserve-guard",
+        "records": [{"content": "I love how the car drives", "location": {"row": 1},
+                     "metadata": {"topic": "Driving experience", "Feedback Type": "Likes", "simulated": True}}]})
+    assert imported.status_code == 201, imported.text
+    calls = []
+
+    def invalid_output(payload, _):
+        calls.append(payload)
+        batch = json.loads(payload["input"])["evidence"]
+        output = ai_result(batch)
+        complaint = copy.deepcopy(output["findings"][0])
+        complaint.update(kind=adverse_kind, summary="Customers dislike the driving experience")
+        output["findings"].append(complaint)
+        output["proposals"][0]["finding_indexes"].append(1)
+        return output
+
+    monkeypatch.setattr(engine, "_request_openai", invalid_output)
+    response = client.post("/pipeline/run", json={"provider": "openai"})
+    assert response.status_code == 422, response.text
+    assert "Positive customer evidence cannot support an adverse finding" in response.json()["detail"]
+    assert len(calls) == 2  # one bounded correction, then a clear failure
+    assert client.get("/findings").json()["items"] == []
+    assert client.get("/requirements").json()["items"] == []
+    with closing(connect()) as connection:
+        assert connection.execute("SELECT count(*) FROM analysis_runs").fetchone()[0] == 0
+
+
+def test_positive_guard_version_does_not_reuse_prior_analysis(client, monkeypatch):
+    imported = client.post("/imports/records", json={"title": "Simulated driving praise", "reference": "simulated-version-guard",
+        "records": [{"content": "I love how the car drives", "location": {"row": 1},
+                     "metadata": {"topic": "Driving experience", "Feedback Type": "Likes", "simulated": True}}]})
+    assert imported.status_code == 201, imported.text
+    monkeypatch.setattr(engine, "PROMPT_VERSION", "bmw-customer-requirements-v2")
+    previous = client.post("/analyses", json={"provider": "deterministic"})
+    assert previous.status_code == 201, previous.text
+    monkeypatch.setattr(engine, "PROMPT_VERSION", "bmw-customer-requirements-v3")
+    current = client.post("/analyses", json={"provider": "deterministic"})
+    assert current.status_code == 201, current.text
+    assert current.json()["cached"] is False
+    assert current.json()["id"] != previous.json()["id"]
+    assert current.json()["prompt_version"] == "bmw-customer-requirements-v3"
 
 
 @pytest.mark.parametrize("text,target", [

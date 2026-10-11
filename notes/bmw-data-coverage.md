@@ -122,6 +122,12 @@ earnings, margins, prices, costs or business cases are rejected. Rows are append
 
 ## Local verification against the real BMW files (2026-10-11)
 
+The [redacted W1 source ledger](bmw-source-ledger.md) reconciles the eight input hashes,
+per-file/per-scope parser and database counts, ignored sheets/pages, date gaps, repeated-import
+deduplication and a manually checked G60/US locator set. It also records the missing annual
+report and unknown source stewardship/permission fields. This is an intake accounting, not a
+claim of complete W1 source governance.
+
 Fresh database, `scripts/import_bmw_data.py` against the 8 files in `data/BMW-Data`, then run again and
 through the Compose API (`ehl-marketdata`, port 18014). Counts only; no verbatims.
 

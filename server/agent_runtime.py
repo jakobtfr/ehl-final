@@ -86,6 +86,14 @@ STRICT_STRUCTURAL = {"allOf", "oneOf", "not", "if", "then", "else", "prefixItems
 STRICT_DROPPED = ("minLength", "maxLength", "examples", "uniqueItems")
 STRICT_FORMATS = {"date-time", "time", "date", "duration", "email", "hostname", "ipv4", "ipv6", "uuid"}
 OPENAI_TOOL_NAME = re.compile(r"[a-zA-Z0-9_-]{1,64}")
+# Registered capabilities whose input carries only a reference, not a vehicle/market pair. Keep
+# this explicit: a newly added ID-only capability must get a reviewed scope rule before task use.
+SCOPED_REFERENCES = {
+    "pipeline.generate_requirements": ("analysis_id", "analysis_runs", "analysis"),
+    "signals.refresh_watchlist": ("watchlist_id", "watchlists", "watchlist"),
+    "signals.backfill_watchlist": ("watchlist_id", "watchlists", "watchlist"),
+    "market_data.extract_report_context": ("source_id", "sources", "source"),
+}
 
 Actor = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 Rationale = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4000)]
@@ -530,15 +538,31 @@ def _effective_input(capability: Capability, vehicle: str, market: str, raw: dic
     for key, value in scope.items():
         if key in fields and getattr(validated, key) != value:
             raise HTTPException(422, f"Task input {key} {getattr(validated, key)!r} differs from the task scope {value!r}")
-    # ID-only capabilities must not smuggle another scope into a task.
-    if capability.name == "pipeline.generate_requirements":
+    # Resolve ID-only inputs at creation, edit and every execution (including retry and recurrence).
+    # A referenced record can never silently lend its scope to a different task.
+    reference = SCOPED_REFERENCES.get(capability.name)
+    if reference is not None:
+        field, table, label = reference
         with closing(connect()) as connection:
-            analysis = connection.execute("SELECT vehicle, market FROM analysis_runs WHERE id=?",
-                                          (payload.get("analysis_id"),)).fetchone()
-        if analysis is None:
-            raise HTTPException(422, "Analysis not found")
-        if tuple(analysis) != (vehicle, market):
-            raise HTTPException(422, "Analysis belongs to another task scope")
+            row = connection.execute(f"SELECT vehicle, market FROM {table} WHERE id=?",
+                                     (getattr(validated, field),)).fetchone()
+        if row is None:
+            raise HTTPException(422, f"{label.capitalize()} not found")
+        if tuple(row) != (vehicle, market):
+            raise HTTPException(422, f"{label.capitalize()} belongs to another task scope")
+    elif capability.name == "markets.draft_conflict_brief":
+        with closing(connect()) as connection:
+            conflict = connection.execute("SELECT vehicle, markets FROM market_conflicts WHERE id=?",
+                                          (validated.conflict_id,)).fetchone()
+        if conflict is None:
+            raise HTTPException(422, "Market conflict not found")
+        # A conflict deliberately spans markets. The task must belong to its vehicle and one of
+        # its recorded markets; a task for an unrelated market cannot draft a brief for it.
+        markets = json.loads(conflict["markets"])
+        if conflict["vehicle"] != vehicle or not isinstance(markets, list) or market not in markets:
+            raise HTTPException(422, "Market conflict belongs to another task scope")
+    elif any(field.endswith("_id") for field in fields) and not {"vehicle", "market"} <= fields.keys():
+        raise HTTPException(422, f"Capability {capability.name} has no reviewed ID scope rule")
     return payload
 
 

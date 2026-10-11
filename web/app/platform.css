@@ -292,10 +292,12 @@ mark.mention { background: color-mix(in srgb, var(--primary), transparent 82%); 
   --origin-bmw_internal: var(--brand);
   --origin-public_official: #b26a00;
   --origin-public_web: #2f8f6b;
+  --origin-public_social: #c2410c;
 }
 .dark {
   --origin-public_official: #e3a64b;
   --origin-public_web: #6cc7a1;
+  --origin-public_social: #f0895a;
 }
 .source-mix .panel-heading p { max-width: 72ch; }
 .source-mix-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px; }
@@ -307,6 +309,7 @@ mark.mention { background: color-mix(in srgb, var(--primary), transparent 82%); 
 .origin-bmw_internal { --origin-color: var(--origin-bmw_internal); }
 .origin-public_official { --origin-color: var(--origin-public_official); }
 .origin-public_web { --origin-color: var(--origin-public_web); }
+.origin-public_social { --origin-color: var(--origin-public_social); }
 .source-mix-bar { display: flex; gap: 2px; height: 12px; overflow: hidden; border-radius: 3px; background: var(--muted); }
 .source-mix-bar > span { flex-basis: 0; min-width: 3px; background: var(--origin-color); }
 .source-mix-caption { margin: 8px 0 16px; font-size: 11px; color: var(--muted-foreground); }
@@ -557,3 +560,25 @@ mark.mention { background: color-mix(in srgb, var(--primary), transparent 82%); 
 @media (prefers-reduced-motion: reduce) {
   .cr-step, .cr-pulse, .cr-dot.is-running, .cr-dots i { animation: none; }
 }
+
+/* Source identity: logos, chips and the YouTube batch strip */
+.source-logo { color: var(--origin-color); flex-shrink: 0; }
+.source-mix-name { display: grid; grid-template-columns: 18px minmax(0, 1fr); column-gap: 8px; align-items: start; }
+.source-mix-name > svg { margin-top: 3px; }
+.source-mix-name .source-mix-publisher { grid-column: 2; }
+.source-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.source-chips a { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--muted);
+  font-size: 12px; color: var(--foreground); max-width: 100%; }
+.source-chips a:hover { background: color-mix(in srgb, var(--muted), var(--foreground) 6%); }
+.source-chips span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.source-chips small { color: var(--muted-foreground); }
+.source-videos { margin-top: 18px; }
+.source-videos h3 { font-size: 12px; font-weight: 500; margin: 0 0 10px; color: var(--muted-foreground); }
+.source-videos ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 0;
+  padding: 0; list-style: none; }
+.source-videos a { display: grid; gap: 4px; color: var(--foreground); }
+.source-videos img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--muted); }
+.source-videos strong { font-size: 12px; font-weight: 500; line-height: 1.35; }
+.source-videos small { font-size: 11px; color: var(--muted-foreground); }
+.connector-batch { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: auto; }
+.connector-batch code { font-size: 10px; }

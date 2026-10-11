@@ -1,14 +1,23 @@
 "use client";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, Building2, Globe2, Landmark, Play } from "lucide-react";
+import {
+  ArrowUpRight,
+  Building2,
+  Globe2,
+  Landmark,
+  MessagesSquare,
+  Play,
+  Terminal,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { api, date, fmt, query, write } from "@/lib/api";
 import { useWorkspace } from "./context";
 import { Empty, ErrorMessage, Loading, Panel } from "./shared";
 
-type Origin = "bmw_internal" | "public_official" | "public_web";
+type Origin =
+  "bmw_internal" | "public_official" | "public_social" | "public_web";
 type Role = "customer_voice" | "scoring_context" | "product_context";
 type MixSource = {
   source_id: string;
@@ -24,6 +33,19 @@ type MixSource = {
   last_observed: string | null;
   linked_records: number;
   linked_requirements: number;
+  videos?: Video[];
+  batch?: string | null;
+  posts?: number | null;
+  comments?: number | null;
+};
+type Video = {
+  id: string;
+  url: string;
+  title: string;
+  channel: string;
+  views: number | null;
+  published: string | null;
+  thumbnail: string;
 };
 type Mix = {
   sources: MixSource[];
@@ -47,7 +69,9 @@ type Mix = {
   };
 };
 type Connector = {
-  key: "bmw_files" | "nhtsa" | "web_research";
+  key: "bmw_files" | "nhtsa" | "web_research" | "reddit" | "youtube";
+  mode?: "batch";
+  last_batch?: { batch: string; imported_at: string; records: number } | null;
   label: string;
   origin: Origin;
   publisher: string;
@@ -75,12 +99,71 @@ export const ORIGINS: Record<
     short: "Public · official",
     icon: Landmark,
   },
+  public_social: {
+    label: "Public social (Reddit, YouTube)",
+    short: "Public · social",
+    icon: MessagesSquare,
+  },
   public_web: {
     label: "Public web research",
     short: "Public · web",
     icon: Globe2,
   },
 };
+
+/** Recognisable marks for each source so a PM sees which existing channel a record comes from. */
+export function SourceLogo({
+  connector,
+  origin,
+  size = 18,
+}: {
+  connector: string | null | undefined;
+  origin: Origin;
+  size?: number;
+}) {
+  if (connector === "reddit")
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        aria-label="Reddit"
+        role="img"
+      >
+        <circle cx="10" cy="10" r="10" fill="#ff4500" />
+        <ellipse cx="10" cy="11.6" rx="5.6" ry="3.7" fill="#fff" />
+        <circle cx="7.9" cy="11.2" r="0.95" fill="#ff4500" />
+        <circle cx="12.1" cy="11.2" r="0.95" fill="#ff4500" />
+        <circle cx="13.9" cy="5.2" r="1.1" fill="#fff" />
+        <path
+          d="M10 8 L11 4.6 L13.9 5.2"
+          stroke="#fff"
+          strokeWidth="0.9"
+          fill="none"
+        />
+      </svg>
+    );
+  if (connector === "youtube")
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        aria-label="YouTube"
+        role="img"
+      >
+        <rect x="0.5" y="3.5" width="19" height="13" rx="3.8" fill="#ff0000" />
+        <path d="M8 7 L13.5 10 L8 13 Z" fill="#fff" />
+      </svg>
+    );
+  const Icon =
+    connector === "nhtsa"
+      ? Landmark
+      : connector === "web_research"
+        ? Globe2
+        : ORIGINS[origin].icon;
+  return <Icon size={size - 2} className={`source-logo origin-${origin}`} />;
+}
 const ROLES: Record<Role, string> = {
   customer_voice: "Customer voice → findings",
   scoring_context: "Scoring context",
@@ -113,7 +196,13 @@ export function SourceMixPanel({ compact = false }: { compact?: boolean }) {
   const { base, scope } = useWorkspace();
   const mix = useSourceMix();
   const data = mix.data;
-  const order: Origin[] = ["bmw_internal", "public_official", "public_web"];
+  const order: Origin[] = [
+    "bmw_internal",
+    "public_official",
+    "public_social",
+    "public_web",
+  ];
+  const videos = (data?.sources || []).flatMap((s) => s.videos || []);
   const voice = (data?.sources || []).filter(
     (s) => s.role === "customer_voice",
   );
@@ -188,6 +277,21 @@ export function SourceMixPanel({ compact = false }: { compact?: boolean }) {
             but dated and independent of BMW&apos;s own channels; sample counts
             are not market prevalence.
           </p>
+          <ul className="source-chips" aria-label="Customer-voice sources">
+            {voice.map((s) => (
+              <li key={s.source_id}>
+                <Link href={`${base}/evidence?source=${s.source_id}`}>
+                  <SourceLogo
+                    connector={s.connector}
+                    origin={s.origin}
+                    size={16}
+                  />
+                  <span>{s.title.replace(/ \(batch .*\)$/, "")}</span>
+                  <small className="tabular-nums">{fmt(s.records)}</small>
+                </Link>
+              </li>
+            ))}
+          </ul>
           {!compact && (
             <div className="pm-table-wrap">
               <table className="pm-table source-mix-table">
@@ -204,7 +308,8 @@ export function SourceMixPanel({ compact = false }: { compact?: boolean }) {
                 <tbody>
                   {data.sources.map((s) => (
                     <tr key={s.source_id}>
-                      <td>
+                      <td className="source-mix-name">
+                        <SourceLogo connector={s.connector} origin={s.origin} />
                         <Link
                           className="text-link"
                           href={`${base}/evidence?source=${s.source_id}`}
@@ -241,6 +346,33 @@ export function SourceMixPanel({ compact = false }: { compact?: boolean }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {!compact && videos.length > 0 && (
+            <div className="source-videos">
+              <h3>Videos in the YouTube batch</h3>
+              <ul>
+                {videos.map((v) => (
+                  <li key={v.id}>
+                    <a href={v.url} target="_blank" rel="noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={v.thumbnail}
+                        alt=""
+                        loading="lazy"
+                        width={160}
+                        height={90}
+                      />
+                      <strong>{v.title}</strong>
+                      <small>
+                        {v.channel}
+                        {v.views ? ` · ${fmt(v.views)} views` : ""}
+                        {v.published ? ` · ${day(v.published)}` : ""}
+                      </small>
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </>
@@ -339,15 +471,39 @@ export function PublicConnectors() {
       ) : (
         <div className="connector-grid">
           {catalog.data.connectors.map((c) => {
-            const Icon = ORIGINS[c.origin].icon;
-            const mutation = running[c.key];
+            if (c.mode === "batch")
+              return (
+                <article
+                  key={c.key}
+                  className={`connector-card origin-${c.origin}`}
+                >
+                  <div className="connector-heading">
+                    <SourceLogo connector={c.key} origin={c.origin} size={16} />
+                    <span className={`source-origin-chip origin-${c.origin}`}>
+                      {ORIGINS[c.origin].short}
+                    </span>
+                  </div>
+                  <h3>{c.label}</h3>
+                  <p>{c.publisher}</p>
+                  <small>
+                    {c.last_batch
+                      ? `Batch ${c.last_batch.batch} · ${fmt(c.last_batch.records)} records imported ${date(c.last_batch.imported_at)}`
+                      : "No batch imported for this scope yet"}
+                  </small>
+                  <small className="connector-batch">
+                    <Terminal size={12} /> Batch snapshot, no API key:{" "}
+                    <code>scripts/import_social_batch.py</code>
+                  </small>
+                </article>
+              );
+            const mutation = running[c.key as keyof typeof running];
             return (
               <article
                 key={c.key}
                 className={`connector-card origin-${c.origin}`}
               >
                 <div className="connector-heading">
-                  <Icon size={16} />
+                  <SourceLogo connector={c.key} origin={c.origin} size={16} />
                   <span className={`source-origin-chip origin-${c.origin}`}>
                     {ORIGINS[c.origin].short}
                   </span>

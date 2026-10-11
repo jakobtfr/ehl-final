@@ -153,3 +153,42 @@ def test_public_evidence_flows_into_requirements_and_the_source_mix(client, nhts
     assert {item["origin"] for item in mix["sources"]} == {"bmw_internal", "public_official"}
     assert mix["public_supporting"] >= 1
     assert client.get("/public-sources/requirements/unknown").status_code == 404
+
+
+def test_social_batches_import_as_public_social_without_usernames(client):
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("social", Path(__file__).parents[1] / "scripts/import_social_batch.py")
+    social = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(social)
+    feed = b"""<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">
+      <entry><id>t3_abc</id><link href="https://www.reddit.com/r/BMWi5/comments/abc/charging/"/>
+        <title>Charging at Electrify America</title><published>2025-05-15T10:00:00+00:00</published>
+        <content type="html">&lt;p&gt;Plug and Charge failed twice at a public charger.&lt;/p&gt; submitted by
+        &lt;a href="https://www.reddit.com/user/someone"&gt; /u/someone &lt;/a&gt; [link] [comments]</content></entry>
+    </feed>"""
+    posts = [{**entry, "subreddit": "BMWi5", "topic": "charging", "kind": "post"} for entry in social._entries(feed)]
+    records = social.reddit_records({"items": posts})
+    assert records[0]["content"] == "Charging at Electrify America\n\nPlug and Charge failed twice at a public charger."
+    assert "someone" not in json.dumps(records)
+    assert records[0]["observed_at"] == "2025-05-15" and records[0]["metadata"]["topic"] == "Charging experience"
+    videos = [{"id": "v1", "url": "https://www.youtube.com/watch?v=v1", "title": "i5 review", "channel": "Edmunds Cars",
+               "comments": [{"id": "c1", "text": "Sold our Teslas and leased this, love the ride.", "like_count": 14,
+                             "timestamp": 1760140800, "is_reply": False},
+                            {"id": "c2", "text": "first", "like_count": 0, "timestamp": None, "is_reply": False}]}]
+    comments = social.youtube_records({"videos": videos})
+    assert [c["location"]["url"] for c in comments] == ["https://www.youtube.com/watch?v=v1&lc=c1"]
+
+    for connector, rows in (("reddit", records), ("youtube", comments)):
+        assert client.post("/imports/records", json={
+            "vehicle": "G60", "market": "US", "kind": "web", "title": f"{connector} batch", "reference": connector,
+            "records": rows, "metadata": {"connector": connector, "batch": "2026-10-11",
+                                          **({"videos": [{"id": "v1", "title": "i5 review"}]} if connector == "youtube" else {})}
+        }).status_code == 201
+    mix = client.get("/public-sources/mix?vehicle=G60&market=US").json()
+    assert mix["by_origin"]["public_social"] == {"sources": 2, "records": 2, "dated_records": 2, "linked_records": 0}
+    assert next(s for s in mix["sources"] if s["connector"] == "youtube")["videos"] == [{"id": "v1", "title": "i5 review"}]
+    batches = {c["key"]: c for c in client.get("/public-sources/catalog?vehicle=G60&market=US").json()["connectors"]}
+    assert batches["reddit"]["mode"] == "batch" and batches["reddit"]["last_batch"]["records"] == 1
+    assert batches["youtube"]["last_batch"]["batch"] == "2026-10-11"

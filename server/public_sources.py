@@ -65,7 +65,8 @@ COMPONENT_TOPICS = (
 )
 DEFAULT_WEB_TOPICS = ("charging", "range", "driver-assistance", "connectivity", "controls", "comfort")
 
-Origin = Literal["bmw_internal", "public_official", "public_web"]
+Origin = Literal["bmw_internal", "public_official", "public_social", "public_web"]
+SOCIAL_CONNECTORS = ("reddit", "youtube")
 
 
 class NhtsaImport(Scope):
@@ -149,6 +150,8 @@ def origin(source: dict) -> Origin:
     metadata = source.get("metadata") or {}
     if metadata.get("connector") == "nhtsa":
         return "public_official"
+    if metadata.get("connector") in SOCIAL_CONNECTORS:
+        return "public_social"
     return "public_web" if source["kind"] == "web" else "bmw_internal"
 
 
@@ -402,7 +405,10 @@ def source_mix(vehicle: str, market: str) -> dict:
                       "records": stat.get("records", 0), "dated_records": stat.get("dated", 0),
                       "first_observed": stat.get("first"), "last_observed": stat.get("last"),
                       "linked_records": link.get("linked_records", 0), "linked_findings": link.get("findings", 0),
-                      "linked_requirements": link.get("requirements", 0)})
+                      "linked_requirements": link.get("requirements", 0),
+                      # What a PM recognises: the videos and threads behind a social batch.
+                      "videos": meta.get("videos", []), "batch": meta.get("batch"),
+                      "posts": meta.get("posts"), "comments": meta.get("comments")})
     role_order = {"customer_voice": 0, "scoring_context": 1, "product_context": 2}
     items.sort(key=lambda item: (role_order[item["role"]], -item["records"], item["title"]))
     by_origin = {}
@@ -457,6 +463,19 @@ def catalog(vehicle: str, market: str) -> dict:
     def run_info(name):
         row = last.get(name)
         return row and {"run_id": row["id"], "status": row["status"], "finished_at": row["finished_at"]}
+    with closing(connect()) as connection:
+        batches = {row["connector"]: dict(row) for row in connection.execute(
+            "SELECT json_extract(s.metadata,'$.connector') AS connector, json_extract(s.metadata,'$.batch') AS batch, "
+            "max(s.created_at) AS imported_at, count(e.id) AS records FROM sources s LEFT JOIN evidence e "
+            "ON e.source_id=s.id WHERE s.vehicle=? AND s.market=? AND json_extract(s.metadata,'$.connector') IN "
+            "('reddit','youtube') GROUP BY s.id ORDER BY s.created_at", (vehicle, market))}
+
+    def batch(key, label, publisher):
+        row = batches.get(key)
+        return {"key": key, "label": label, "origin": "public_social", "publisher": publisher, "mode": "batch",
+                "available": False, "reason": "Batch snapshot without API credentials: scripts/import_social_batch.py",
+                "endpoint": "scripts/import_social_batch.py", "last_run": None,
+                "last_batch": row and {"batch": row["batch"], "imported_at": row["imported_at"], "records": row["records"]}}
     return {"vehicle": vehicle, "market": market, "connectors": [
         {"key": "bmw_files", "label": "BMW customer feedback, studies, sales and option lists", "origin": "bmw_internal",
          "publisher": "BMW Group (supplied files)", "available": True, "reason": None,
@@ -468,6 +487,8 @@ def catalog(vehicle: str, market: str) -> dict:
         {"key": "web_research", "label": "Public owner forums and press reviews", "origin": "public_web",
          "publisher": "OpenAI web search, grounded to returned URLs", "available": web_ready, "reason": web_reason,
          "endpoint": "POST /public-sources/web-research/import", "last_run": run_info("public_sources.web_research")},
+        batch("reddit", "Reddit owner communities", "Reddit public RSS (r/BMWi5, r/BMW)"),
+        batch("youtube", "YouTube review comments", "YouTube public comments (yt-dlp)"),
     ]}
 
 

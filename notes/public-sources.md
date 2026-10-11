@@ -15,6 +15,31 @@ support. Studies and sales feed scoring context (market weights, preserve list, 
 describe the product. `GET /public-sources/mix` reports this per source, and
 `GET /public-sources/requirements/{id}` breaks one requirement version's linked records down by source.
 
+## Social batches: Reddit and YouTube (no API keys)
+
+The official Reddit and YouTube Data APIs need credentials, so social customer voice arrives as **batch snapshots**
+rather than a live connector:
+
+```sh
+uv run python scripts/import_social_batch.py fetch                 # Reddit RSS + YouTube comments → data/social/<date>/
+uv run python scripts/import_social_batch.py import --api-url http://127.0.0.1:8000
+```
+
+- **Reddit:** public RSS search over r/BMWi5 (charging, range, comfort, controls, noise, driver assistance) and
+  r/BMW (G60, 530i/540i, i5), plus the comments of the top thread per topic. Requests are paced and back off on
+  HTTP 429; the JSON API is refused without OAuth.
+- **YouTube:** the top comments of four US-market G60 reviews (Edmunds' one-year i5 M60 test, Auto Focus, Raiti's
+  Rides 530i vs CT5, UsedCarsTV) through `yt-dlp`, with title, channel, views, publication date and thumbnail.
+  Comment dates are YouTube's relative times ("1 year ago"), so they are approximate.
+- Usernames, author ids and RSS footers are dropped. Each record keeps its permalink (YouTube links to the
+  comment), date, and like count or subreddit. Snapshots live in the git-ignored `data/social/`, so the demo
+  never depends on rate limits; re-importing the same snapshot deduplicates.
+- Both arrive as one source per platform with origin `public_social`. The UI shows the Reddit and YouTube marks,
+  the source chips on the Overview and the batch's video thumbnails on Sources & imports.
+
+After the YouTube batch and a cumulative update on G60 / US, 99 of its 278 comments support 10 of the 11
+requirements, and every requirement now cites at least one public record.
+
 ## Safeguards
 
 - **No BMW data to public services.** NHTSA receives only make/model/year; web research only public names.

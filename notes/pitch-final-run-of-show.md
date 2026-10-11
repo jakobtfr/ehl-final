@@ -59,6 +59,7 @@ local capture pack ([`bmw-demo-captures.md`](bmw-demo-captures.md)). No recorded
 
 ## Q&A
 
+Q&A is 1 minute, so expect one or two questions (Bene_BMW, 11 October 11:34). The 3:00 limit is strict.
 Answer in under 30 seconds: the number first, the caveat second. Use the
 [Q&A card](bmw-demo-qa.md).
 

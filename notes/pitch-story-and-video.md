@@ -1,7 +1,7 @@
 # Pitch story and video direction: pipeline to agent runtime
 
 Status: **creative direction**, 11 October 2026. This is a proposed narrative for a
-three-minute BMW pitch (plus three minutes of Q&A), not a verified demo script or a
+three-minute BMW pitch (plus one minute of Q&A, per BMW on 11 October), not a verified demo script or a
 finished video. Use the [frozen G60 / US runbook](bmw-demo-runbook.md) for live actions
 and the [claim ledger](bmw-demo-claim-ledger.md) for exact numbers and boundaries.
 

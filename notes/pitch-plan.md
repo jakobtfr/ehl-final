@@ -1,6 +1,6 @@
 # Pitch plan: 30-second trailer + 2:30 live
 
-Status: **draft**, 11 October 2026. Format is 3 minutes of pitch plus 3 minutes of Q&A ([BMW guidance](bmw-guidance.md)). Builds on [pitch and demo research](pm-role-research/06-pitch-and-demo.md), [the challenge](challenge.md) and [web/DEMO.md](../web/DEMO.md).
+Status: **draft**, 11 October 2026. Format was 3 minutes of pitch plus 3 minutes of Q&A; on 11 October BMW cut Q&A to 1 minute and confirmed the demo counts inside the 3 minutes ([BMW guidance](bmw-guidance.md)). Builds on [pitch and demo research](pm-role-research/06-pitch-and-demo.md), [the challenge](challenge.md) and [web/DEMO.md](../web/DEMO.md).
 
 > **Frozen presentation override (11 October, build `77f0376`):** This is a pre-freeze creative draft, not the verified script. Use the [G60 / US runbook](bmw-demo-runbook.md), [claim ledger](bmw-demo-claim-ledger.md), and [Q&A card](bmw-demo-qa.md) for the 11:30 presentation. The frozen candidate uses deterministic reference analysis, has no verified live OpenAI multi-agent chain or trailer recording, and has no Codebeamer or BMW identity integration. The live PM must personally make any decision. Do not use the draft lines below that say agents drafted the hero, AI chose its 80% target, or decided requirements already flow to Codebeamer.
 
